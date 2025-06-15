@@ -1,7 +1,6 @@
+from logging import Logger
 from fastapi import HTTPException
 import httpx
-
-from .logger import get_logger
 
 
 class StravaApi:
@@ -9,10 +8,10 @@ class StravaApi:
     A class to handle Strava API interactions.
     """
 
-    def __init__(self, access_token: str):
+    def __init__(self, access_token: str, logger: Logger):
         self.access_token = access_token
         self.base_url = "https://www.strava.com/api/v3"
-        self.logger = get_logger()
+        self.logger = logger
 
     async def get_athlete(self):
         """

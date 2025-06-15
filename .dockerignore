@@ -45,5 +45,6 @@ Thumbs.db
 .env
 .temp*/
 dev-db/
-test/
+unit-tests/
+.pytest_cache/
 

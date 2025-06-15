@@ -42,6 +42,7 @@ Thumbs.db
 .history/
 
 # Custom
+.pytest_cache/
 .env
 .temp*/
 

@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
     logger = get_logger()
     env = load_environment()
 
-    db_manager = MongoDbManager(env)
+    db_manager = MongoDbManager(env, logger)
     db = await db_manager.connect()
 
     app.state.db = db

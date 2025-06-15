@@ -1,10 +1,10 @@
 from enum import Enum
+from logging import Logger
 from pymongo import AsyncMongoClient
 from pymongo.server_api import ServerApi
 
 from app.common.environment import PkCentralEnv
 from app.common.types import AsyncDatabase
-from app.common.logger import get_logger
 
 
 class DbCollection(str, Enum):
@@ -19,8 +19,8 @@ class MongoDbManager:
     and ensures proper cleanup of resources.
     """
 
-    def __init__(self, env: PkCentralEnv):
-        self.logger = get_logger()
+    def __init__(self, env: PkCentralEnv, logger: Logger):
+        self.logger = logger
         self.env = env
         self.mongo_client = None
         self.db = None
