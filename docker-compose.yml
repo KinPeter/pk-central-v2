@@ -1,0 +1,11 @@
+# Docker compose file to run the API on the server
+# using the latest deployed image from Docker Hub
+
+services:
+  pk-central-v2:
+    image: kinp/pk-central-v2:latest
+    ports:
+      - "5500:5500"
+    env_file:
+      - .env
+    restart: always

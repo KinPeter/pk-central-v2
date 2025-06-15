@@ -1,0 +1,15 @@
+services:
+  central-v2-mongodb_server:
+    image: mongo:8.0
+    environment:
+      MONGO_INITDB_DATABASE: central
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - 30017:27017
+    volumes:
+      - ./dev-db.mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - central-v2-mongodb_data_container:/data/db
+
+volumes:
+  central-v2-mongodb_data_container:
