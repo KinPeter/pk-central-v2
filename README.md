@@ -31,19 +31,7 @@ Describe the API here.
    pip install -r requirements.txt
    ```
 
-3. Set up the environment variables into the `.env` file.
-
-   ```bash
-   # Mongo DB connection string and database name
-   MONGODB_URI=
-   MONGODB_NAME=
-
-   # Root path on the server where the script is running
-   ROOT_PATH=
-
-   # TBA
-
-   ```
+3. Set up the environment variables into the `.env` file, see all required variables in the `.env.example` file.
 
 ## API
 

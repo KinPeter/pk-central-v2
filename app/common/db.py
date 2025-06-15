@@ -1,8 +1,8 @@
-import os
 from enum import Enum
 from pymongo import AsyncMongoClient
 from pymongo.server_api import ServerApi
 
+from app.common.environment import PkCentralEnv
 from app.common.types import AsyncDatabase
 from app.common.logger import get_logger
 
@@ -19,8 +19,9 @@ class MongoDbManager:
     and ensures proper cleanup of resources.
     """
 
-    def __init__(self):
+    def __init__(self, env: PkCentralEnv):
         self.logger = get_logger()
+        self.env = env
         self.mongo_client = None
         self.db = None
 
@@ -39,11 +40,11 @@ class MongoDbManager:
 
     async def _initiate(self):
         self.logger.info("Connecting to MongoDB...")
-        mongodb_uri = os.getenv("MONGODB_URI")
+        mongodb_uri = self.env.MONGODB_URI
         if not mongodb_uri:
             raise ValueError("MONGODB_URI environment variable is not set.")
 
-        mongodb_name = os.getenv("MONGODB_NAME")
+        mongodb_name = self.env.MONGODB_NAME
         if not mongodb_name:
             raise ValueError("MONGODB_NAME environment variable is not set.")
 

@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.common.db import MongoDbManager
+from app.common.environment import load_environment
 from app.common.logger import LoggingMiddleware, get_logger
 from app.common.version import get_version
 
@@ -13,11 +14,15 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    db_manager = MongoDbManager()
-    db = await db_manager.connect()
-    app.state.db = db
+    logger = get_logger()
+    env = load_environment()
 
-    app.state.logger = get_logger()
+    db_manager = MongoDbManager(env)
+    db = await db_manager.connect()
+
+    app.state.db = db
+    app.state.env = env
+    app.state.logger = logger
 
     yield
 
