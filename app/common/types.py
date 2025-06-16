@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from pymongo.asynchronous.database import AsyncDatabase as AsyncMongoDatabase
 
@@ -20,3 +21,13 @@ class PkBaseModel(BaseModel):
         alias_generator=to_camel,
         populate_by_name=True,
     )
+
+
+class BaseEntity(PkBaseModel):
+    """
+    Base entity model that includes common fields for all entities.
+    It contains an ID and a creation timestamp.
+    """
+
+    id: str
+    created_at: datetime | None = None

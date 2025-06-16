@@ -9,8 +9,16 @@ from app.common.types import AsyncDatabase
 
 class DbCollection(str, Enum):
     USERS = "users"
+    START_SETTINGS = "start_settings"
+    SHORTCUTS = "shortcuts"
+    NOTES = "notes"
+    PERSONAL_DATA = "personal_data"
     ACTIVITIES = "activities"
-    SYNC_METADATA = "sync_metadata"
+    FLIGHTS = "flights"
+    VISITS = "visits"
+    STRAVA_ACTIVITIES = "strava_activities"
+    STRAVA_SYNC_META = "strava_sync_metadata"
+    REDDIT = "reddit"
 
 
 class MongoDbManager:

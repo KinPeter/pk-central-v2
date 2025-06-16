@@ -8,6 +8,7 @@ from app.common.db import MongoDbManager
 from app.common.environment import load_environment
 from app.common.logger import LoggingMiddleware, get_logger
 from app.common.version import get_version
+from app.modules.auth import auth
 
 load_dotenv()
 
@@ -54,3 +55,5 @@ app.add_middleware(
 )
 
 app.add_middleware(LoggingMiddleware)
+
+app.include_router(auth.router)
