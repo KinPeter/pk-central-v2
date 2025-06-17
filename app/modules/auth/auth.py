@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Request
 from fastapi.params import Body
 
-from app.common.responses import MessageResponse
+from app.common.responses import ListResponse, MessageResponse
+from app.common.types import PkBaseModel
 from app.modules.auth.auth_types import EmailLoginRequest
 from app.modules.auth.request_login_code import request_login_code
 
@@ -18,3 +19,17 @@ async def post_request_login_code(
     If the user does not have an account, a new account will be created.
     """
     return await request_login_code(body, request)
+
+
+class TestListItem(PkBaseModel):
+    name: str
+
+
+@router.get(path="/list")
+async def get_list() -> ListResponse[TestListItem]:
+    """
+    Test endpoint to return a list of items.
+    """
+    return ListResponse[TestListItem](
+        entities=[TestListItem(name="Item 1"), TestListItem(name="Item 2")]
+    )

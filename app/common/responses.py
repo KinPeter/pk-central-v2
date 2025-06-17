@@ -6,7 +6,34 @@ from app.common.types import PkBaseModel
 logger = get_logger()
 
 
-class MessageResponse(PkBaseModel):
+class OkResponse(PkBaseModel):
+    def __init__(self, **kwargs):
+        response_str = str(kwargs)
+        if not response_str:
+            content = f"OK response with no content"
+        elif len(response_str) > 70:
+            content = f"OK response: {response_str[:70]}..."
+        else:
+            content = f"OK response: {response_str}"
+        logger.info(content)
+        super().__init__(**kwargs)
+
+
+class ListModel[T](PkBaseModel):
+    entities: list[T]
+
+
+class ListResponse[T](ListModel[T]):
+    def __init__(self, entities: list[T]):
+        if not entities:
+            content = "OK List response with no items"
+        else:
+            content = f"OK List response with {len(entities)} items."
+        logger.info(content)
+        super().__init__(entities=entities)
+
+
+class MessageResponse(OkResponse):
     message: str
 
 
