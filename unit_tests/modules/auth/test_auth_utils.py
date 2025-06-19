@@ -192,7 +192,7 @@ class TestVerifyLoginCode:
             "sha256", raw_code.encode("utf-8"), salt_bytes, 100_000
         )
         hashed_code = base64.b64encode(hash_bytes).decode("utf-8")
-        expiry = datetime.now() + timedelta(minutes=5)
+        expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
         assert verify_login_code(raw_code, hashed_code, salt, expiry) is True
 
     def test_expired_code_raises(self):
@@ -203,7 +203,7 @@ class TestVerifyLoginCode:
             "sha256", raw_code.encode("utf-8"), salt_bytes, 100_000
         )
         hashed_code = base64.b64encode(hash_bytes).decode("utf-8")
-        expiry = datetime.now() - timedelta(minutes=1)
+        expiry = datetime.now(timezone.utc) - timedelta(minutes=1)
         with pytest.raises(UnauthorizedException) as exc_info:
             verify_login_code(raw_code, hashed_code, salt, expiry)
         assert "expired" in str(exc_info.value).lower()
@@ -215,7 +215,7 @@ class TestVerifyLoginCode:
         salt_bytes = base64.b64decode(salt.encode("utf-8"))
         hash_bytes = hashlib.pbkdf2_hmac("sha256", b"654321", salt_bytes, 100_000)
         hashed_code = base64.b64encode(hash_bytes).decode("utf-8")
-        expiry = datetime.now() + timedelta(minutes=5)
+        expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
         with pytest.raises(UnauthorizedException) as exc_info:
             verify_login_code(raw_code, hashed_code, salt, expiry)
         assert "invalid" in str(exc_info.value).lower()
