@@ -80,7 +80,7 @@ class TestVerifyToken:
             "app.modules.auth.auth_utils.jwt.decode", return_value=payload
         ) as mock_decode:
             result = verify_token(token, secret)
-            assert result == payload
+            assert result == payload["user_id"]
             mock_decode.assert_called_once_with(token, secret, algorithms=["HS256"])
 
     def test_verify_token_expired(self, secret, token):
