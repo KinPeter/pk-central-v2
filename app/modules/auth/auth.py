@@ -1,10 +1,10 @@
-from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Request, status
 from fastapi.params import Depends
 
-from app.common.responses import IdResponse, ListResponse, MessageResponse
+from app.common.responses import IdResponse, ListResponse, MessageResponse, ResponseDocs
 from app.common.types import PkBaseModel
+from app.modules.auth.token_refresh import token_refresh
 from app.modules.auth.auth_types import (
     CodeLoginRequest,
     CurrentUser,
@@ -18,6 +18,7 @@ from app.modules.auth.instant_login_code import instant_login_code
 from app.modules.auth.password_login import password_login
 from app.modules.auth.password_signup import password_signup
 from app.modules.auth.request_login_code import request_login_code
+from app.modules.auth.set_password import set_password
 from app.modules.auth.verify_login_code import login_code_verify
 
 
@@ -28,6 +29,7 @@ router = APIRouter(tags=["Auth"], prefix="/auth")
     path="/login-code",
     summary="Request Login Code for sign up or login",
     status_code=status.HTTP_201_CREATED,
+    responses={**ResponseDocs.forbidden_response},
 )
 async def post_request_login_code(
     body: EmailLoginRequest, request: Request
@@ -43,6 +45,7 @@ async def post_request_login_code(
     path="/instant-login-code",
     summary="[DEV only] Request instant Login Code",
     status_code=status.HTTP_201_CREATED,
+    responses={**ResponseDocs.forbidden_response},
 )
 async def post_instant_login_code(
     body: EmailLoginRequest, request: Request
@@ -59,6 +62,7 @@ async def post_instant_login_code(
     path="/verify-login-code",
     summary="Log in with a login code",
     status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response, **ResponseDocs.forbidden_response},
 )
 async def post_verify_login_code(
     body: CodeLoginRequest, request: Request
@@ -74,6 +78,11 @@ async def post_verify_login_code(
     path="/password-signup",
     summary="Sign up with password",
     status_code=status.HTTP_201_CREATED,
+    responses={
+        **ResponseDocs.unauthorized_response,
+        **ResponseDocs.conflict_response,
+        **ResponseDocs.forbidden_response,
+    },
 )
 async def post_password_signup(
     body: PasswordLoginRequest, request: Request
@@ -89,6 +98,7 @@ async def post_password_signup(
     path="/password-login",
     summary="Log in with email and password",
     status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response},
 )
 async def post_password_login(
     body: PasswordLoginRequest, request: Request
@@ -104,6 +114,7 @@ async def post_password_login(
     path="/token-refresh",
     summary="Refresh the access token",
     status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response},
 )
 async def post_token_refresh(
     request: Request, user: Annotated[CurrentUser, Depends(auth_user)]
@@ -112,13 +123,25 @@ async def post_token_refresh(
     Refresh the access token for the current user.
     This endpoint should be called when the access token is about to expire.
     """
-    print("Refreshing token for user:", user.id, user.email)
-    return LoginResponse(
-        email="user.email",
-        id="user.id",
-        token="token",
-        expires_at=datetime.now(),
-    )
+    return await token_refresh(request, user)
+
+
+@router.post(
+    path="/set-password",
+    summary="Set a new password for the user",
+    status_code=status.HTTP_201_CREATED,
+    responses={**ResponseDocs.unauthorized_response, **ResponseDocs.forbidden_response},
+)
+async def post_set_password(
+    body: PasswordLoginRequest,
+    request: Request,
+    user: Annotated[CurrentUser, Depends(auth_user)],
+) -> IdResponse:
+    """
+    Set a new password for the user.
+    This works for setting a password for the first time or updating an existing password.
+    """
+    return await set_password(body, request, user)
 
 
 class TestListItem(PkBaseModel):

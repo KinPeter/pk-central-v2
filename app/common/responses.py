@@ -79,3 +79,32 @@ class ConflictException(BaseErrorResponse):
     def __init__(self, detail: str | None = None):
         detail = f"Conflict: {detail}" if detail else "Conflict"
         super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
+
+
+class ResponseDocs:
+    unauthorized_response = {
+        401: {
+            "description": "Unauthorized",
+            "content": {
+                "application/json": {"example": {"detail": "Unauthorized: <reason>"}}
+            },
+        },
+    }
+
+    conflict_response = {
+        409: {
+            "description": "Conflict",
+            "content": {
+                "application/json": {"example": {"detail": "Conflict: <reason>"}}
+            },
+        },
+    }
+
+    forbidden_response = {
+        403: {
+            "description": "Forbidden",
+            "content": {
+                "application/json": {"example": {"detail": "Forbidden: <operation>"}}
+            },
+        },
+    }
