@@ -37,6 +37,10 @@ class MessageResponse(OkResponse):
     message: str
 
 
+class IdResponse(OkResponse):
+    id: str
+
+
 class BaseErrorResponse(HTTPException):
     def __init__(self, status_code: int, detail: str):
         logger.warning(f"{status_code} Error response: {detail}")
@@ -69,3 +73,9 @@ class NotImplementedException(BaseErrorResponse):
     def __init__(self, detail: str | None = None):
         detail = f"Not implemented: {detail}" if detail else "Not implemented"
         super().__init__(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=detail)
+
+
+class ConflictException(BaseErrorResponse):
+    def __init__(self, detail: str | None = None):
+        detail = f"Conflict: {detail}" if detail else "Conflict"
+        super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)

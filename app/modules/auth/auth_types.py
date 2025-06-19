@@ -1,5 +1,6 @@
 from datetime import datetime
-from pydantic import EmailStr
+from pydantic import EmailStr, Field
+from app.common.responses import OkResponse
 from app.common.types import BaseEntity, PkBaseModel
 
 
@@ -32,15 +33,41 @@ class EmailLoginRequest(PkBaseModel):
 
 
 class PasswordLoginRequest(EmailLoginRequest):
-    password: str
+    password: str = Field(..., min_length=6, max_length=128)
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "myname@gmail.com",
+                    "password": "mysecretpassword",
+                }
+            ]
+        }
+    }
 
 
 class CodeLoginRequest(EmailLoginRequest):
     login_code: str
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "myname@gmail.com",
+                    "login_code": "123456",
+                }
+            ]
+        }
+    }
 
-class LoginResponse(PkBaseModel):
+
+class LoginResponse(OkResponse):
     id: str
     email: str
     token: str
     expires_at: datetime
+
+
+class LoginCodeResponse(OkResponse):
+    login_code: str

@@ -1,0 +1,56 @@
+from logging import Logger
+from fastapi import Request
+
+from app.common.db import DbCollection
+from app.common.environment import PkCentralEnv
+from app.common.responses import InternalServerErrorException, UnauthorizedException
+from app.common.types import AsyncDatabase
+from app.modules.auth.auth_types import CodeLoginRequest, LoginResponse
+from app.modules.auth.auth_utils import get_access_token, verify_login_code
+
+
+async def login_code_verify(body: CodeLoginRequest, request: Request) -> LoginResponse:
+    """
+    Verify the login code sent to the user's email.
+    If the code is not valid or expired, it will return an error.
+    """
+    env: PkCentralEnv = request.app.state.env
+    logger: Logger = request.app.state.logger
+    db: AsyncDatabase = request.app.state.db
+    email = body.email.lower().strip()
+    code = body.login_code.strip()
+
+    try:
+        user = await db.get_collection(DbCollection.USERS).find_one({"email": email})
+    except Exception as e:
+        logger.error(f"Error fetching user {email}: {e}")
+        raise InternalServerErrorException(
+            "An error occurred while logging in. Please try again later." + str(e)
+        )
+
+    if (
+        not user
+        or not user["login_code_hash"]
+        or not verify_login_code(
+            raw_code=code,
+            hashed_code=user["login_code_hash"],
+            salt=user["login_code_salt"],
+            expiry=user["login_code_expires"],
+        )
+    ):
+        raise UnauthorizedException("Invalid email or login code")
+
+    try:
+        token, expires_at = get_access_token(
+            user_id=user["id"], secret=env.JWT_SECRET, expires_in_days=env.TOKEN_EXPIRY
+        )
+
+        return LoginResponse(
+            email=email, id=user["id"], token=token, expires_at=expires_at
+        )
+
+    except Exception as e:
+        logger.error(f"Error logging in user {email}: {e}")
+        raise InternalServerErrorException(
+            "An error occurred while logging in. Please try again later." + str(e)
+        )

@@ -64,7 +64,10 @@ def get_hashed(raw_string: str) -> tuple[str, str]:
 def verify_login_code(
     raw_code: str, hashed_code: str, salt: str, expiry: datetime
 ) -> bool:
-    if datetime.now() > expiry:
+    if expiry.tzinfo is None:
+        expiry = expiry.replace(tzinfo=timezone.utc)
+
+    if datetime.now(timezone.utc) > expiry:
         raise UnauthorizedException(reason="Login code has expired")
 
     salt_bytes = base64.b64decode(salt.encode("utf-8"))
