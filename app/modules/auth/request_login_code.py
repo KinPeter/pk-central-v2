@@ -1,8 +1,5 @@
-import uuid
-from datetime import datetime, timezone
 from logging import Logger
 from fastapi import Request
-from app.common.db import DbCollection
 from app.common.email import EmailManager
 from app.common.environment import PkCentralEnv
 from app.common.responses import (
@@ -12,7 +9,6 @@ from app.common.responses import (
 )
 from app.common.types import AsyncDatabase
 from app.modules.auth.auth_types import EmailLoginRequest
-from app.modules.auth.auth_utils import get_login_code
 from app.modules.auth.user_utils import sign_up_or_login_user
 
 

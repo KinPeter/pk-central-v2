@@ -13,9 +13,9 @@ class User(BaseEntity):
     password_salt: str | None
 
 
-class JWTPayload:
-    user_id: str
-    exp: int
+class CurrentUser(PkBaseModel):
+    id: str
+    email: str
 
 
 class EmailLoginRequest(PkBaseModel):

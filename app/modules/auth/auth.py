@@ -1,14 +1,19 @@
+from datetime import datetime
+from typing import Annotated
 from fastapi import APIRouter, Request, status
+from fastapi.params import Depends
 
 from app.common.responses import IdResponse, ListResponse, MessageResponse
 from app.common.types import PkBaseModel
 from app.modules.auth.auth_types import (
     CodeLoginRequest,
+    CurrentUser,
     EmailLoginRequest,
     LoginCodeResponse,
     LoginResponse,
     PasswordLoginRequest,
 )
+from app.modules.auth.auth_utils import auth_user
 from app.modules.auth.instant_login_code import instant_login_code
 from app.modules.auth.password_login import password_login
 from app.modules.auth.password_signup import password_signup
@@ -93,6 +98,27 @@ async def post_password_login(
     If the user does not exist or the password is incorrect, it will return an error.
     """
     return await password_login(body, request)
+
+
+@router.post(
+    path="/token-refresh",
+    summary="Refresh the access token",
+    status_code=status.HTTP_200_OK,
+)
+async def post_token_refresh(
+    request: Request, user: Annotated[CurrentUser, Depends(auth_user)]
+) -> LoginResponse:
+    """
+    Refresh the access token for the current user.
+    This endpoint should be called when the access token is about to expire.
+    """
+    print("Refreshing token for user:", user.id, user.email)
+    return LoginResponse(
+        email="user.email",
+        id="user.id",
+        token="token",
+        expires_at=datetime.now(),
+    )
 
 
 class TestListItem(PkBaseModel):

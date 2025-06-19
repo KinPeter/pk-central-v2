@@ -1,15 +1,21 @@
 import base64
-from datetime import datetime, timedelta, timezone
 import hashlib
-import os
-import time
 import jwt
+import os
 import random
-
+import time
+from datetime import datetime, timedelta, timezone
+from logging import Logger
+from fastapi import Request, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
+from typing import Annotated
 
-from app.common.responses import UnauthorizedException
-from app.modules.auth.auth_types import JWTPayload
+from app.common.db import DbCollection
+from app.common.environment import PkCentralEnv
+from app.common.responses import InternalServerErrorException, UnauthorizedException
+from app.common.types import AsyncDatabase
+from app.modules.auth.auth_types import CurrentUser
 
 
 def get_access_token(
@@ -25,14 +31,16 @@ def get_access_token(
     return token, expires_at
 
 
-def verify_token(token: str, secret: str) -> JWTPayload:
+def verify_token(token: str, secret: str) -> str:
     try:
         payload = jwt.decode(token, secret, algorithms=["HS256"])
-        return payload
+        return payload["user_id"]
     except jwt.ExpiredSignatureError:
         raise UnauthorizedException(reason="Token has expired")
     except jwt.InvalidTokenError:
         raise UnauthorizedException(reason="Invalid token")
+    except Exception as e:
+        raise UnauthorizedException(reason=f"Token verification failed: {str(e)}")
 
 
 class LoginCodeData(BaseModel):
@@ -89,3 +97,36 @@ def verify_password(raw_password: str, hashed_password: str, salt: str) -> bool:
     if hash_b64 != hashed_password:
         raise UnauthorizedException(reason="Invalid password")
     return True
+
+
+async def auth_user(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials, Security(HTTPBearer())],
+) -> CurrentUser:
+    """
+    Authenticate the user based on the provided token in the request.
+    This function retrieves the user ID from the token, fetches the user data from the database,
+    and returns the current user object if the token is valid.
+    Used as a dependency in routes that require authentication.
+    """
+    db: AsyncDatabase = request.app.state.db
+    logger: Logger = request.app.state.logger
+    env: PkCentralEnv = request.app.state.env
+    token = credentials.credentials
+
+    user_id: str = verify_token(token, env.JWT_SECRET)
+
+    if not user_id:
+        raise UnauthorizedException(reason="Invalid token")
+
+    try:
+        user_collection = db.get_collection(DbCollection.USERS)
+        user = await user_collection.find_one({"id": user_id})
+    except Exception as e:
+        logger.error(f"Error fetching user {user_id}: {e}")
+        raise InternalServerErrorException(detail="Failed to fetch user data" + str(e))
+
+    if not user:
+        raise UnauthorizedException(reason="Invalid token")
+
+    return CurrentUser(id=user_id, email=user["email"])
