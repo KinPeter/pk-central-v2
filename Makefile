@@ -18,3 +18,9 @@ test-all:
 
 deploy:
 	./deploy.sh
+
+test-docker:
+	docker-compose -f ./acceptance_tests/acc-test.docker-compose.yml up --build --exit-code-from central_v2_app_server && docker-compose -f ./acceptance_tests/acc-test.docker-compose.yml down -v
+
+clear-test-docker:
+	docker-compose -f ./acceptance_tests/acc-test.docker-compose.yml down -v

@@ -1,0 +1,73 @@
+services:
+  central_v2_mongodb_server:
+    image: mongo:8.0
+    container_name: central_v2_acc-test-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: testdb
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - "31017:27017"
+    logging:
+      driver: none
+    volumes:
+      - ./acc-test.mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - central_v2_acc-test-network
+
+  central_v2_app_server:
+    container_name: central_v2_acc-test-server
+    build:
+      context: ../
+      dockerfile: ./acceptance_tests/acc-test.Dockerfile
+    environment:
+      PYTHONPATH: .
+      CI: true
+      PK_ENV: test
+      MONGODB_URI: mongodb://admin:admin@central_v2_mongodb_server:27017/
+      MONGODB_NAME: testdb
+      ROOT_PATH: /central/v2
+      EMAIL_HOST: mail.email.com
+      EMAIL_USER: test@email.com
+      EMAIL_PASS: password
+      MAILER_URL: http://proxy_mock:9876/mail
+      MAILER_API_KEY: mailerapikey123
+      JWT_SECRET: supersecretstring
+      LOGIN_CODE_EXPIRY: 15
+      TOKEN_EXPIRY: 7
+      NOTIFICATION_EMAIL: main@test.com
+      EMAILS_ALLOWED: all
+      PROXY_AIRLABS_AIRLINES_URL: https://airlabs.co/api/v9/airlines
+      PROXY_AIRLABS_AIRPORTS_URL: https://airlabs.co/api/v9/airports
+      PROXY_LOCATION_REVERSE_URL: https://eu1.locationiq.com/v1/reverse
+      PROXY_DEEPL_TRANSLATE_URL: https://api-free.deepl.com/v2/translate
+      AIRLABS_API_KEY: airlabsApiKey
+      LOCATION_IQ_API_KEY: locationIqApiKey
+      OPEN_WEATHER_MAP_API_KEY: openWeatherMapApiKey
+      UNSPLASH_API_KEY: unsplashApiKey
+      DEEPL_API_KEY: deeplApiKey
+      GEMINI_API_KEY: geminiApiKey
+      STRAVA_CLIENT_ID: stravaClientId
+      STRAVA_CLIENT_SECRET: stravaClientSecret
+      REDDIT_CLIENT_ID: redditClientId
+      REDDIT_CLIENT_SECRET: redditClientSecret
+      REDDIT_USER: Reddit-User3234
+      REDDIT_PASSWORD: redditPassword1234
+      REDDIT_USER_AGENT: python:com.example.testing:v1.0 (by /u/Reddit-User3234)
+    ports:
+      - "5500:5500"
+    volumes:
+      - central_v2_app-data:/app
+    working_dir: /app
+    depends_on:
+      - central_v2_mongodb_server
+    networks:
+      - central_v2_acc-test-network
+
+volumes:
+  central_v2_app-data:
+    name: central_v2_acc-test-app-data
+
+networks:
+  central_v2_acc-test-network:
+    name: central_v2_acc-test-network

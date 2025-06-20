@@ -4,14 +4,14 @@ FROM python:3.13-slim
 WORKDIR /app
 
 # Install dependencies
-COPY requirements.txt .
+COPY ../requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the files
-COPY . .
+COPY ../ .
 
 # Expose port
 EXPOSE 5500
 
-# Run the FastAPI app
-CMD ["fastapi", "run", "app/main.py", "--port", "5500"]
+# Run the FastAPI acceptance tests
+CMD ["sh", "-c", "sleep 30 && pytest -v"]

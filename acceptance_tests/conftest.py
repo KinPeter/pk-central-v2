@@ -1,11 +1,17 @@
-import re
+from operator import is_
+import os
 import secrets
 import pytest
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 from app.main import app
 
-mongodb_test_uri = "mongodb://admin:admin@localhost:30017/"
+local_mongodb_uri = "mongodb://admin:admin@localhost:30017/"
+ci_mongodb_uri = os.getenv("MONGODB_URI")
+
+is_ci = os.getenv("CI", "false").lower() == "true"
+
+mongodb_test_uri = ci_mongodb_uri if is_ci else local_mongodb_uri
 mongodb_test_db = "test_db"
 
 
