@@ -1,4 +1,3 @@
-from operator import is_
 import os
 import secrets
 import pytest
