@@ -131,9 +131,7 @@ class TestSignupOrLoginUser:
                 )
                 assert result == "code"
                 email_manager.send_signup_notification.assert_not_called()
-                email_manager.send_login_code.assert_called_once_with(
-                    "testenv@example.com", "code"
-                )
+                email_manager.send_login_code.assert_not_called()
 
 
 class TestCreateInitialUser:

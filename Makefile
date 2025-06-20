@@ -8,6 +8,12 @@ clear-db:
 	docker-compose -f dev_db/dev-db.docker-compose.yml down -v
 
 test:
+	PYTHONPATH=. pytest -v unit_tests/
+
+test-acc:
+	PYTHONPATH=. pytest -v acceptance_tests/
+
+test-all:
 	PYTHONPATH=. pytest -v
 
 deploy:

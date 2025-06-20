@@ -45,7 +45,7 @@ async def sign_up_or_login_user(
         },
     )
 
-    if send_emails and email_manager is not None:
+    if send_emails and env.PK_ENV.lower() != "test" and email_manager is not None:
         email_manager.send_login_code(email, login_code_data.login_code)
 
     return login_code_data.login_code
