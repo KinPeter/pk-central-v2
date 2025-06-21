@@ -1,3 +1,6 @@
+from unittest.mock import AsyncMock, patch
+
+
 class TestUpdateAndGetRedditConfig:
     def test_success(self, client, login_user):
         token, user_id, email = login_user
@@ -164,3 +167,81 @@ class TestUpdateAndGetRedditConfig:
         data = response.json()
         assert "detail" in data
         assert "field required" in data["detail"][0]["msg"].lower()
+
+
+class TestFetchSubRedditPosts:
+    def test_fetch_sub_posts_multiple_subs(self, client, login_user):
+        token, user_id, email = login_user
+
+        fake_posts_funny = [
+            {
+                "title": "Funny Post",
+                "url": "https://reddit.com/funny1",
+                "author": "alice",
+                "subreddit": "funny",
+            }
+        ]
+        fake_posts_gaming = [
+            {
+                "title": "Gaming Post",
+                "url": "https://reddit.com/gaming1",
+                "author": "bob",
+                "subreddit": "gaming",
+            }
+        ]
+        with patch("app.modules.reddit.fetch_sub_posts.RedditApi") as mock_api:
+            instance = mock_api.return_value
+            instance.fetch_sub_posts = AsyncMock(
+                side_effect=[fake_posts_funny, fake_posts_gaming]
+            )
+            instance.close = AsyncMock()
+            response = client.post(
+                "/reddit/subs",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"subs": ["funny", "gaming"], "limit": 1},
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["entities"]) == 2
+            titles = [post["title"] for post in data["entities"]]
+            assert "Funny Post" in titles
+            assert "Gaming Post" in titles
+
+
+class TestFetchUserRedditPosts:
+    def test_fetch_user_posts_multiple_users(self, client, login_user):
+        token, user_id, email = login_user
+
+        fake_posts_alice = [
+            {
+                "title": "Alice's Post",
+                "url": "https://reddit.com/alice1",
+                "author": "alice",
+                "subreddit": "funny",
+            }
+        ]
+        fake_posts_bob = [
+            {
+                "title": "Bob's Post",
+                "url": "https://reddit.com/bob1",
+                "author": "bob",
+                "subreddit": "gaming",
+            }
+        ]
+        with patch("app.modules.reddit.fetch_user_posts.RedditApi") as mock_api:
+            instance = mock_api.return_value
+            instance.fetch_user_posts = AsyncMock(
+                side_effect=[fake_posts_alice, fake_posts_bob]
+            )
+            instance.close = AsyncMock()
+            response = client.post(
+                "/reddit/users",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"usernames": ["alice", "bob"], "limit": 1},
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["entities"]) == 2
+            titles = [post["title"] for post in data["entities"]]
+            assert "Alice's Post" in titles
+            assert "Bob's Post" in titles
