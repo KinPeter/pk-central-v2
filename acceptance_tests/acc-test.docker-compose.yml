@@ -30,6 +30,8 @@ services:
       EMAIL_HOST: mail.email.com
       EMAIL_USER: test@email.com
       EMAIL_PASS: password
+      MAILER_URL: http://mail.email.com
+      MAILER_API_KEY: mailerApiKey
       JWT_SECRET: supersecretstring
       LOGIN_CODE_EXPIRY: 15
       TOKEN_EXPIRY: 7
