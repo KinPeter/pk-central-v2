@@ -53,7 +53,8 @@ make dev
 
 Open your browser:
 
-- Api docs: `http://localhost:5500/docs`
+- Swagger UI Api docs: `http://localhost:5500/docs`
+- Redocly Api docs: `http://localhost:5500/redoc`
 
 Publish new docker image:
 

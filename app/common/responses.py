@@ -1,3 +1,4 @@
+from operator import not_
 from fastapi import HTTPException, status
 
 from app.common.logger import get_logger
@@ -59,6 +60,18 @@ class ForbiddenOperationException(BaseErrorResponse):
         super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
 
+class NotFoundException(BaseErrorResponse):
+    def __init__(self, resource: str | None = None):
+        detail = f"Not Found: {resource}" if resource else "Not Found"
+        super().__init__(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+
+
+class ConflictException(BaseErrorResponse):
+    def __init__(self, detail: str | None = None):
+        detail = f"Conflict: {detail}" if detail else "Conflict"
+        super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
+
+
 class InternalServerErrorException(BaseErrorResponse):
     def __init__(self, detail: str | None = None):
         detail = (
@@ -75,18 +88,21 @@ class NotImplementedException(BaseErrorResponse):
         super().__init__(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=detail)
 
 
-class ConflictException(BaseErrorResponse):
-    def __init__(self, detail: str | None = None):
-        detail = f"Conflict: {detail}" if detail else "Conflict"
-        super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
-
-
 class ResponseDocs:
     unauthorized_response = {
         401: {
             "description": "Unauthorized",
             "content": {
                 "application/json": {"example": {"detail": "Unauthorized: <reason>"}}
+            },
+        },
+    }
+
+    not_found_response = {
+        404: {
+            "description": "Not Found",
+            "content": {
+                "application/json": {"example": {"detail": "Not Found: <resource>"}}
             },
         },
     }

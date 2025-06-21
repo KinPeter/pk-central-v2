@@ -9,6 +9,7 @@ from app.common.environment import load_environment
 from app.common.logger import LoggingMiddleware, get_logger
 from app.common.version import get_version
 from app.modules.auth import auth
+from app.modules.reddit import reddit
 
 load_dotenv()
 
@@ -57,3 +58,4 @@ app.add_middleware(
 app.add_middleware(LoggingMiddleware)
 
 app.include_router(auth.router)
+app.include_router(reddit.router)

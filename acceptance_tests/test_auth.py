@@ -262,3 +262,21 @@ class TestSetPassword:
             json={"email": email, "password": "short"},
         )
         assert response.status_code == 422
+
+
+class TestInitialUserConfigCreation:
+    def test_success(self, client, login_user):
+        token, user_id, email = login_user
+
+        response = client.get(
+            "/reddit/config",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "sets" in data
+        assert "blockedUsers" in data
+        assert len(data["sets"]) == 1
+        assert data["sets"][0]["name"] == "Default"
+        assert data["sets"][0]["subs"] == []
+        assert data["sets"][0]["usernames"] == []

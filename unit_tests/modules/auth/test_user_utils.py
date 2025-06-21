@@ -150,26 +150,34 @@ class TestCreateInitialUser:
     async def test_create_initial_user_inserts_user(self, db, logger):
         email = "test@example.com"
         db.get_collection.return_value.insert_one = AsyncMock()
-        user = await create_initial_user(email, db, logger)
-        db.get_collection.return_value.insert_one.assert_awaited_once()
-        assert user["email"] == email
-        assert user["id"]
-        assert user["created_at"]
-        assert user["login_code_hash"] is None
-        assert user["login_code_salt"] is None
-        assert user["login_code_expires"] is None
-        assert user["password_hash"] is None
-        assert user["password_salt"] is None
+        with patch(
+            "app.modules.auth.user_utils.create_initial_reddit_config",
+            new_callable=AsyncMock,
+        ) as mock_create_initial_reddit_config:
+            user = await create_initial_user(email, db, logger)
+            db.get_collection.return_value.insert_one.assert_awaited_once()
+            mock_create_initial_reddit_config.assert_awaited_once_with(
+                db, logger, user["id"]
+            )
+            assert user["email"] == email
+            assert user["id"]
+            assert user["created_at"]
+            assert user["login_code_hash"] is None
+            assert user["login_code_salt"] is None
+            assert user["login_code_expires"] is None
+            assert user["password_hash"] is None
+            assert user["password_salt"] is None
 
     @pytest.mark.asyncio
     async def test_logger_called(self, db, logger):
         email = "logtest@example.com"
         db.get_collection.return_value.insert_one = AsyncMock()
-        user = await create_initial_user(email, db, logger)
-        logger.info.assert_called()
-        logger.warning.assert_any_call(
-            "Initial settings generation is not implemented yet."
-        )
-        logger.warning.assert_any_call(
-            "Initial activities data generation is not implemented yet."
-        )
+        with patch("app.modules.auth.user_utils.create_initial_reddit_config"):
+            user = await create_initial_user(email, db, logger)
+            logger.info.assert_called()
+            logger.warning.assert_any_call(
+                "Initial settings generation is not implemented yet."
+            )
+            logger.warning.assert_any_call(
+                "Initial activities data generation is not implemented yet."
+            )
