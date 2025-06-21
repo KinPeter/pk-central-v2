@@ -5,8 +5,16 @@ from fastapi.params import Depends
 from app.common.responses import ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user
+from app.modules.reddit.fetch_sub_posts import fetch_sub_posts
+from app.modules.reddit.fetch_user_posts import fetch_user_posts
 from app.modules.reddit.get_reddit_config import get_reddit_config
-from app.modules.reddit.reddit_types import RedditConfig, RedditConfigRequest
+from app.modules.reddit.reddit_types import (
+    RedditConfig,
+    RedditConfigRequest,
+    RedditPost,
+    RedditSubsRequest,
+    RedditUsersRequest,
+)
 from app.modules.reddit.update_reddit_config import update_reddit_config
 
 
@@ -50,3 +58,37 @@ async def put_update_reddit_config(
     Update the Reddit configuration for the current user.
     """
     return await update_reddit_config(request, body, user)
+
+
+@router.post(
+    path="/subs",
+    summary="Fetch posts from subreddits",
+    status_code=status.HTTP_200_OK,
+    responses={
+        **ResponseDocs.unauthorized_response,
+    },
+)
+async def post_fetch_sub_posts(
+    request: Request, body: RedditSubsRequest
+) -> ListResponse[RedditPost]:
+    """
+    Fetch posts from specified subreddits.
+    """
+    return await fetch_sub_posts(request, body)
+
+
+@router.post(
+    path="/users",
+    summary="Fetch posts from reddit users",
+    status_code=status.HTTP_200_OK,
+    responses={
+        **ResponseDocs.unauthorized_response,
+    },
+)
+async def post_fetch_user_posts(
+    request: Request, body: RedditUsersRequest
+) -> ListResponse[RedditPost]:
+    """
+    Fetch posts from specified reddit users.
+    """
+    return await fetch_user_posts(request, body)
