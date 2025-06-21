@@ -21,23 +21,18 @@ async def set_password(
     """
     logger: Logger = request.app.state.logger
     db: AsyncDatabase = request.app.state.db
-    email = body.email.lower().strip()
-    password = body.password.strip()
+    email = None
 
     try:
+        email = body.email.lower().strip()
+        password = body.password.strip()
+
         users_collection = db.get_collection(DbCollection.USERS)
         user = await users_collection.find_one({"id": req_user.id})
-    except Exception as e:
-        logger.error(f"Error fetching user {email}: {e}")
-        raise InternalServerErrorException(
-            "An error occurred while setting the password. Please try again later."
-            + str(e)
-        )
 
-    if not user or user["email"].lower() != email:
-        raise ForbiddenOperationException()
+        if not user or user["email"].lower() != email:
+            raise ForbiddenOperationException()
 
-    try:
         hashed_password, salt = get_hashed(password)
         await users_collection.update_one(
             {"id": user["id"]},
@@ -52,6 +47,8 @@ async def set_password(
         logger.info(f"Password updated successfully for user {email}")
         return IdResponse(id=user["id"])
 
+    except ForbiddenOperationException as e:
+        raise e
     except Exception as e:
         logger.error(f"Error updating password for user {email}: {e}")
         raise InternalServerErrorException(

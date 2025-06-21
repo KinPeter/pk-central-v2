@@ -17,25 +17,20 @@ async def password_login(body: PasswordLoginRequest, request: Request) -> LoginR
     env: PkCentralEnv = request.app.state.env
     logger: Logger = request.app.state.logger
     db: AsyncDatabase = request.app.state.db
-    email = body.email.lower().strip()
-    password = body.password.strip()
+    email = None
 
     try:
+        email = body.email.lower().strip()
+        password = body.password.strip()
+
         user = await db.get_collection(DbCollection.USERS).find_one({"email": email})
-    except Exception as e:
-        logger.error(f"Error fetching user {email}: {e}")
-        raise InternalServerErrorException(
-            "An error occurred while logging in. Please try again later." + str(e)
-        )
+        if not user or not verify_password(
+            raw_password=password,
+            hashed_password=user["password_hash"],
+            salt=user["password_salt"],
+        ):
+            raise UnauthorizedException("Invalid email or password")
 
-    if not user or not verify_password(
-        raw_password=password,
-        hashed_password=user["password_hash"],
-        salt=user["password_salt"],
-    ):
-        raise UnauthorizedException("Invalid email or password")
-
-    try:
         token, expires_at = get_access_token(
             user_id=user["id"], secret=env.JWT_SECRET, expires_in_days=env.TOKEN_EXPIRY
         )
@@ -44,6 +39,8 @@ async def password_login(body: PasswordLoginRequest, request: Request) -> LoginR
             email=email, id=user["id"], token=token, expires_at=expires_at
         )
 
+    except UnauthorizedException as e:
+        raise e
     except Exception as e:
         logger.error(f"Error logging in user {email}: {e}")
         raise InternalServerErrorException(

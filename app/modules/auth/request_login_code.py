@@ -18,14 +18,16 @@ async def request_login_code(
     env: PkCentralEnv = request.app.state.env
     logger: Logger = request.app.state.logger
     db: AsyncDatabase = request.app.state.db
-    email_manager = EmailManager(env)
-    email = body.email.lower().strip()
-
-    is_restricted = env.EMAILS_ALLOWED is not None and env.EMAILS_ALLOWED != "all"
-    if is_restricted and email not in env.EMAILS_ALLOWED.split(","):
-        raise ForbiddenOperationException("Sign up")
+    email = None
 
     try:
+        email_manager = EmailManager(env)
+        email = body.email.lower().strip()
+
+        is_restricted = env.EMAILS_ALLOWED is not None and env.EMAILS_ALLOWED != "all"
+        if is_restricted and email not in env.EMAILS_ALLOWED.split(","):
+            raise ForbiddenOperationException("Sign up")
+
         await sign_up_or_login_user(
             email=email,
             send_emails=True,
@@ -37,6 +39,8 @@ async def request_login_code(
 
         return MessageResponse(message="Check your inbox")
 
+    except ForbiddenOperationException as e:
+        raise e
     except Exception as e:
         logger.error(f"Error requesting login code for {email}: {e}")
         raise InternalServerErrorException(

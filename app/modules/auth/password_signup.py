@@ -19,20 +19,22 @@ async def password_signup(body: PasswordLoginRequest, request: Request) -> IdRes
     env: PkCentralEnv = request.app.state.env
     logger: Logger = request.app.state.logger
     db: AsyncDatabase = request.app.state.db
-    email_manager = EmailManager(env)
-    email = body.email.lower().strip()
-    password = body.password.strip()
-
-    is_restricted = env.EMAILS_ALLOWED is not None and env.EMAILS_ALLOWED != "all"
-    if is_restricted and email not in env.EMAILS_ALLOWED.split(","):
-        raise ForbiddenOperationException("Sign up")
-
     users_collection = db.get_collection(DbCollection.USERS)
-    existing_user = await users_collection.find_one({"email": email})
-    if existing_user:
-        raise ConflictException("User with this email already exists")
+    email = None
 
     try:
+        email_manager = EmailManager(env)
+        email = body.email.lower().strip()
+        password = body.password.strip()
+
+        is_restricted = env.EMAILS_ALLOWED is not None and env.EMAILS_ALLOWED != "all"
+        if is_restricted and email not in env.EMAILS_ALLOWED.split(","):
+            raise ForbiddenOperationException("Sign up")
+
+        existing_user = await users_collection.find_one({"email": email})
+        if existing_user:
+            raise ConflictException("User with this email already exists")
+
         user = await create_initial_user(email, db, logger)
 
         password_hash, password_salt = get_hashed(password)
@@ -47,6 +49,10 @@ async def password_signup(body: PasswordLoginRequest, request: Request) -> IdRes
 
         return IdResponse(id=user["id"])
 
+    except ForbiddenOperationException as e:
+        raise e
+    except ConflictException as e:
+        raise e
     except Exception as e:
         logger.error(f"Error during password signup {email}: {e}")
         await users_collection.find_one_and_delete({"email": email})
