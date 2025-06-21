@@ -1,6 +1,7 @@
 import pytest
+import requests
 from unittest.mock import MagicMock, patch
-from app.common.email import EmailManager, EmailData
+from app.common.email import EmailManager, EmailData, PkMailData
 from app.common.responses import InternalServerErrorException, NotImplementedException
 
 
@@ -11,6 +12,8 @@ def env():
     mock_env.EMAIL_HOST = "smtp.pk.com"
     mock_env.EMAIL_USER = "user@pk.com"
     mock_env.EMAIL_PASS = "password"
+    mock_env.MAILER_URL = "https://mailer.pk.com"
+    mock_env.MAILER_API_KEY = "api-key"
     return mock_env
 
 
@@ -47,18 +50,24 @@ def test_send_data_backup_raises_not_implemented(email_manager):
 
 def test_send_email_success(env):
     email_manager = EmailManager(env)
-    email_data = EmailData("subject", "to@pk.com", "text", "<b>html</b>")
-    with patch("app.common.email.smtplib.SMTP_SSL") as mock_smtp:
-        mock_server = MagicMock()
-        mock_smtp.return_value.__enter__.return_value = mock_server
+    email_data = PkMailData("subject", "to@pk.com", "<b>html</b>")
+    with patch("app.common.email.requests.post") as mock_post:
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_post.return_value = mock_response
         email_manager.send_email(email_data)
-        mock_server.login.assert_called_once_with(env.EMAIL_USER, env.EMAIL_PASS)
-        mock_server.send_message.assert_called_once()
+        mock_post.assert_called_once()
+        args, kwargs = mock_post.call_args
+        assert kwargs["json"]["to"] == "to@pk.com"
+        assert kwargs["headers"]["User-Agent"] == "Mozilla/5.0"
 
 
 def test_send_email_raises_on_error(env):
     email_manager = EmailManager(env)
-    email_data = EmailData("subject", "to@pk.com", "text", "<b>html</b>")
-    with patch("app.common.email.smtplib.SMTP", side_effect=Exception("fail")):
+    email_data = PkMailData("subject", "to@pk.com", "<b>html</b>")
+    with patch(
+        "app.common.email.requests.post",
+        side_effect=requests.exceptions.RequestException("fail"),
+    ):
         with pytest.raises(InternalServerErrorException):
             email_manager.send_email(email_data)

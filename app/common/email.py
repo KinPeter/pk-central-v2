@@ -1,7 +1,75 @@
 import smtplib
+import requests
+
 from email.message import EmailMessage
+
 from app.common.environment import PkCentralEnv
 from app.common.responses import InternalServerErrorException, NotImplementedException
+
+
+class PkMailData:
+    def __init__(
+        self,
+        subject: str,
+        to: str,
+        html: str,
+        attachment_content: str | None = None,
+        attachment_filename: str | None = None,
+    ):
+        self.subject = subject
+        self.to = to
+        self.html = html
+        self.attachment_content = attachment_content
+        self.attachment_filename = attachment_filename
+
+
+class EmailManager:
+    def __init__(self, env: PkCentralEnv):
+        self.url = env.MAILER_URL
+        self.api_key = env.MAILER_API_KEY
+        self.notification_email = env.NOTIFICATION_EMAIL
+        self.templates = EmailTemplates(env)
+
+    def send_signup_notification(self, email: str):
+        subject = "A user signed up to PK-Central"
+        text, html = self.templates.signup_notification(email)
+        email_data = PkMailData(subject, self.notification_email, html)
+        self.send_email(email_data)
+
+    def send_login_code(self, email: str, login_code: str):
+        subject = f"{login_code} - Log in to PK-Central"
+        text, html = self.templates.login_code(login_code)
+        email_data = PkMailData(subject, email, html)
+        self.send_email(email_data)
+
+    def send_data_backup(self, name: str):
+        # FIXME - Implement data backup email functionality first
+        raise NotImplementedException(
+            "Data backup email functionality is not implemented yet."
+        )
+
+    def send_email(self, email_data: PkMailData):
+        # Need to fake the user agent because tarhelypark blocks python-requests
+        headers = {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"}
+        payload = {
+            "apiKey": self.api_key,
+            "subject": email_data.subject,
+            "to": email_data.to,
+            "html": email_data.html,
+        }
+        if email_data.attachment_content and email_data.attachment_filename:
+            payload["attachmentContent"] = email_data.attachment_content
+            payload["attachmentFilename"] = email_data.attachment_filename
+
+        try:
+            response = requests.post(
+                self.url, json=payload, headers=headers, timeout=10
+            )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            raise InternalServerErrorException(
+                f"Failed to send email to {email_data.to}: {e}"
+            )
 
 
 class EmailData:
@@ -12,7 +80,12 @@ class EmailData:
         self.html = html
 
 
-class EmailManager:
+class SmtpLibEmailManager:
+    """
+    DigitalOcean is blocking all SMTP ports, so this is not used for now.
+    Use the HTTP-based EmailManager instead.
+    """
+
     def __init__(self, env: PkCentralEnv):
         self.notification_email = env.NOTIFICATION_EMAIL
         self.email_host = env.EMAIL_HOST
