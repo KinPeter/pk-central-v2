@@ -4,12 +4,12 @@ db.createUser({
   roles: [
     {
       role: "readWrite",
-      db: "central",
+      db: "central-v2",
     },
   ],
 });
 
-db = db.getSiblingDB("central");
+db = db.getSiblingDB("central-v2");
 
 db.createCollection("users");
 db.createCollection("activities");

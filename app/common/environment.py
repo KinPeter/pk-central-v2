@@ -15,8 +15,6 @@ class PkCentralEnv:
         email_host: str,
         email_user: str,
         email_pass: str,
-        mailer_url: str,
-        mailer_api_key: str,
         proxy_airlabs_airlines_url: str,
         proxy_airlabs_airports_url: str,
         proxy_location_reverse_url: str,
@@ -47,8 +45,6 @@ class PkCentralEnv:
         self.EMAIL_HOST = email_host
         self.EMAIL_USER = email_user
         self.EMAIL_PASS = email_pass
-        self.MAILER_URL = mailer_url
-        self.MAILER_API_KEY = mailer_api_key
         self.PROXY_AIRLABS_AIRLINES_URL = proxy_airlabs_airlines_url
         self.PROXY_AIRLABS_AIRPORTS_URL = proxy_airlabs_airports_url
         self.PROXY_LOCATION_REVERSE_URL = proxy_location_reverse_url
@@ -113,14 +109,6 @@ def load_environment() -> PkCentralEnv:
     email_pass = os.getenv("EMAIL_PASS")
     if not email_pass:
         raise ValueError("Missing required environment variable: EMAIL_PASS")
-
-    mailer_url = os.getenv("MAILER_URL")
-    if not mailer_url:
-        raise ValueError("Missing required environment variable: MAILER_URL")
-
-    mailer_api_key = os.getenv("MAILER_API_KEY")
-    if not mailer_api_key:
-        raise ValueError("Missing required environment variable: MAILER_API_KEY")
 
     proxy_airlabs_airlines_url = os.getenv("PROXY_AIRLABS_AIRLINES_URL")
     if not proxy_airlabs_airlines_url:
@@ -216,8 +204,6 @@ def load_environment() -> PkCentralEnv:
         email_host=email_host,
         email_user=email_user,
         email_pass=email_pass,
-        mailer_url=mailer_url,
-        mailer_api_key=mailer_api_key,
         proxy_airlabs_airlines_url=proxy_airlabs_airlines_url,
         proxy_airlabs_airports_url=proxy_airlabs_airports_url,
         proxy_location_reverse_url=proxy_location_reverse_url,

@@ -2,7 +2,7 @@ services:
   central-v2-mongodb_server:
     image: mongo:8.0
     environment:
-      MONGO_INITDB_DATABASE: central
+      MONGO_INITDB_DATABASE: central-v2
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
     ports:
