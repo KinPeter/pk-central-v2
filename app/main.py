@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.common.config import get_allowed_origins
 from app.common.db import MongoDbManager
 from app.common.environment import load_environment
 from app.common.logger import LoggingMiddleware, get_logger
@@ -15,23 +16,7 @@ load_dotenv()
 
 env = load_environment()
 
-allow_origins = [
-    "https://p-kin.com",
-    "https://www.p-kin.com",
-    "https://api.p-kin.com",
-    "https://start.p-kin.com",
-    "https://startv4.p-kin.com",
-    "https://tripz.p-kin.com",
-    "https://stuff.p-kin.com",
-    "https://rddit.p-kin.com",
-]
-
-if env.PK_ENV == "dev":
-    allow_origins.extend(
-        [
-            "http://localhost:5499",
-        ]
-    )
+allow_origins = get_allowed_origins(env)
 
 
 @asynccontextmanager

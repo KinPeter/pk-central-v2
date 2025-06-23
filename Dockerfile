@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the files
 COPY ./app ./app
+COPY .version ./.version
 
 # Expose port
 EXPOSE 5500

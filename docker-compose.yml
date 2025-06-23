@@ -3,7 +3,7 @@
 
 services:
   pk-central-v2:
-    image: kinp/pk-central-v2:latest
+    image: kinp/pk-central-v2:0.0.5
     ports:
       - "5500:5500"
     env_file:
