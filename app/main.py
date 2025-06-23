@@ -13,11 +13,30 @@ from app.modules.reddit import reddit
 
 load_dotenv()
 
+env = load_environment()
+
+allow_origins = [
+    "https://p-kin.com",
+    "https://www.p-kin.com",
+    "https://api.p-kin.com",
+    "https://start.p-kin.com",
+    "https://startv4.p-kin.com",
+    "https://tripz.p-kin.com",
+    "https://stuff.p-kin.com",
+    "https://rddit.p-kin.com",
+]
+
+if env.PK_ENV == "dev":
+    allow_origins.extend(
+        [
+            "http://localhost:5499",
+        ]
+    )
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger = get_logger()
-    env = load_environment()
 
     db_manager = MongoDbManager(env, logger)
     db = await db_manager.connect()
@@ -41,15 +60,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://p-kin.com",
-        "https://www.p-kin.com",
-        "https://api.p-kin.com",
-        "https://start.p-kin.com",
-        "https://startv4.p-kin.com",
-        "https://tripz.p-kin.com",
-        "https://stuff.p-kin.com",
-    ],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
