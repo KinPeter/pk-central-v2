@@ -2,7 +2,7 @@
 # using the latest deployed image from Docker Hub
 
 services:
-  pk-central-v2:
+  api:
     image: kinp/pk-central-v2:0.0.5
     ports:
       - "5500:5500"
