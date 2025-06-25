@@ -69,12 +69,14 @@ async def put_update_reddit_config(
     },
 )
 async def post_fetch_sub_posts(
-    request: Request, body: RedditSubsRequest
+    request: Request,
+    body: RedditSubsRequest,
+    user: Annotated[CurrentUser, Depends(auth_user)],
 ) -> ListResponse[RedditPost]:
     """
     Fetch posts from specified subreddits.
     """
-    return await fetch_sub_posts(request, body)
+    return await fetch_sub_posts(request, body, user)
 
 
 @router.post(
@@ -86,9 +88,11 @@ async def post_fetch_sub_posts(
     },
 )
 async def post_fetch_user_posts(
-    request: Request, body: RedditUsersRequest
+    request: Request,
+    body: RedditUsersRequest,
+    user: Annotated[CurrentUser, Depends(auth_user)],
 ) -> ListResponse[RedditPost]:
     """
     Fetch posts from specified reddit users.
     """
-    return await fetch_user_posts(request, body)
+    return await fetch_user_posts(request, body, user)

@@ -1,16 +1,22 @@
 import asyncio
+from logging import Logger
 from random import shuffle
 from fastapi import Request
+from app.common.db import DbCollection
+from app.common.environment import PkCentralEnv
 from app.common.responses import InternalServerErrorException, ListResponse
+from app.common.types import AsyncDatabase
+from app.modules.auth.auth_types import CurrentUser
 from app.modules.reddit.reddit_api import RedditApi
 from app.modules.reddit.reddit_types import RedditPost, RedditSubsRequest
 
 
 async def fetch_sub_posts(
-    request: Request, body: RedditSubsRequest
+    request: Request, body: RedditSubsRequest, user: CurrentUser
 ) -> ListResponse[RedditPost]:
-    logger = request.app.state.logger
-    env = request.app.state.env
+    logger: Logger = request.app.state.logger
+    env: PkCentralEnv = request.app.state.env
+    db: AsyncDatabase = request.app.state.db
 
     reddit = RedditApi(env, logger)
     if reddit is None:
@@ -32,6 +38,16 @@ async def fetch_sub_posts(
 
         if len(subs) > 1:
             shuffle(result)
+
+        config_collection = db.get_collection(DbCollection.REDDIT)
+        user_config = await config_collection.find_one({"user_id": user.id})
+
+        if user_config and user_config["blocked_users"]:
+            result = [
+                post
+                for post in result
+                if post.author not in user_config["blocked_users"]
+            ]
 
         logger.info(f"Fetched {len(result)} images from {len(subs)} subreddits")
         return ListResponse[RedditPost](entities=result)

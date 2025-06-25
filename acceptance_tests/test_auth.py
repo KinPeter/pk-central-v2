@@ -1,5 +1,6 @@
 import re
 import time
+from unittest.mock import MagicMock, patch
 import pytest
 
 
@@ -36,69 +37,85 @@ class TestInstantLoginCode:
 
 class TestPasswordSignup:
     def test_success(self, client, user_email):
-        response = client.post(
-            "/auth/password-signup",
-            json={"email": user_email, "password": "TestPassword123"},
-        )
-        assert response.status_code == 201
-        data = response.json()
-        assert "id" in data
+        with patch(
+            "app.modules.auth.password_signup.EmailManager"
+        ) as mock_email_manager:
+            mock_email_manager.return_value = MagicMock()
+            response = client.post(
+                "/auth/password-signup",
+                json={"email": user_email, "password": "TestPassword123"},
+            )
+            assert response.status_code == 201
+            data = response.json()
+            assert "id" in data
 
     def test_email_already_exists(self, client, user_email):
-        # First signup to create the user
-        response = client.post(
-            "/auth/password-signup",
-            json={"email": user_email, "password": "TestPassword123"},
-        )
-        assert response.status_code == 201
+        with patch(
+            "app.modules.auth.password_signup.EmailManager"
+        ) as mock_email_manager:
+            mock_email_manager.return_value = MagicMock()
+            # First signup to create the user
+            response = client.post(
+                "/auth/password-signup",
+                json={"email": user_email, "password": "TestPassword123"},
+            )
+            assert response.status_code == 201
 
-        # Try to sign up again with the same email
-        response = client.post(
-            "/auth/password-signup",
-            json={"email": user_email, "password": "AnotherPassword123"},
-        )
-        assert response.status_code == 409
-        data = response.json()
-        assert "detail" in data
-        assert "User with this email already exists" in data["detail"]
+            # Try to sign up again with the same email
+            response = client.post(
+                "/auth/password-signup",
+                json={"email": user_email, "password": "AnotherPassword123"},
+            )
+            assert response.status_code == 409
+            data = response.json()
+            assert "detail" in data
+            assert "User with this email already exists" in data["detail"]
 
 
 class TestPasswordLogin:
     def test_success(self, client, user_email):
-        # First signup to create the user
-        response = client.post(
-            "/auth/password-signup",
-            json={"email": user_email, "password": "TestPassword123"},
-        )
-        assert response.status_code == 201
+        with patch(
+            "app.modules.auth.password_signup.EmailManager"
+        ) as mock_email_manager:
+            mock_email_manager.return_value = MagicMock()
+            # First signup to create the user
+            response = client.post(
+                "/auth/password-signup",
+                json={"email": user_email, "password": "TestPassword123"},
+            )
+            assert response.status_code == 201
 
-        # Now try to log in
-        response = client.post(
-            "/auth/password-login",
-            json={"email": user_email, "password": "TestPassword123"},
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert "id" in data
-        assert "token" in data
+            # Now try to log in
+            response = client.post(
+                "/auth/password-login",
+                json={"email": user_email, "password": "TestPassword123"},
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert "id" in data
+            assert "token" in data
 
     def test_invalid_password(self, client, user_email):
-        # First signup to create the user
-        response = client.post(
-            "/auth/password-signup",
-            json={"email": user_email, "password": "TestPassword123"},
-        )
-        assert response.status_code == 201
+        with patch(
+            "app.modules.auth.password_signup.EmailManager"
+        ) as mock_email_manager:
+            mock_email_manager.return_value = MagicMock()
+            # First signup to create the user
+            response = client.post(
+                "/auth/password-signup",
+                json={"email": user_email, "password": "TestPassword123"},
+            )
+            assert response.status_code == 201
 
-        # Try to log in with an invalid password
-        response = client.post(
-            "/auth/password-login",
-            json={"email": user_email, "password": "WrongPassword"},
-        )
-        assert response.status_code == 401
-        data = response.json()
-        assert "detail" in data
-        assert "Invalid password" in data["detail"]
+            # Try to log in with an invalid password
+            response = client.post(
+                "/auth/password-login",
+                json={"email": user_email, "password": "WrongPassword"},
+            )
+            assert response.status_code == 401
+            data = response.json()
+            assert "detail" in data
+            assert "Invalid password" in data["detail"]
 
     def test_nonexistent_user(self, client, user_email):
         # Try to log in with a non-existent user
@@ -114,32 +131,43 @@ class TestPasswordLogin:
 
 class TestRequestLoginCode:
     def test_success_signup(self, client, user_email):
-        response = client.post(
-            "/auth/login-code",
-            json={"email": user_email},
-        )
-        assert response.status_code == 201
-        data = response.json()
-        assert "message" in data
-        assert "Check your inbox" in data["message"]
+        with patch(
+            "app.modules.auth.request_login_code.EmailManager"
+        ) as mock_email_manager:
+            mock_email_manager.return_value = MagicMock()
+            response = client.post(
+                "/auth/login-code",
+                json={"email": user_email},
+            )
+            assert response.status_code == 201
+            data = response.json()
+            assert "message" in data
+            assert "Check your inbox" in data["message"]
 
     def test_success_login(self, client, user_email):
-        # First signup to create the user
-        response = client.post(
-            "/auth/password-signup",
-            json={"email": user_email, "password": "TestPassword123"},
-        )
-        assert response.status_code == 201
+        with patch(
+            "app.modules.auth.password_signup.EmailManager"
+        ) as mock_email_manager1, patch(
+            "app.modules.auth.request_login_code.EmailManager"
+        ) as mock_email_manager2:
+            mock_email_manager1.return_value = MagicMock()
+            mock_email_manager2.return_value = MagicMock()
+            # First signup to create the user
+            response = client.post(
+                "/auth/password-signup",
+                json={"email": user_email, "password": "TestPassword123"},
+            )
+            assert response.status_code == 201
 
-        # Now request a login code
-        response = client.post(
-            "/auth/login-code",
-            json={"email": user_email},
-        )
-        assert response.status_code == 201
-        data = response.json()
-        assert "message" in data
-        assert "Check your inbox" in data["message"]
+            # Now request a login code
+            response = client.post(
+                "/auth/login-code",
+                json={"email": user_email},
+            )
+            assert response.status_code == 201
+            data = response.json()
+            assert "message" in data
+            assert "Check your inbox" in data["message"]
 
 
 class TestVerifyLoginCode:
