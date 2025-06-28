@@ -5,6 +5,7 @@ from app.common.db import DbCollection
 from app.common.email import EmailManager
 from app.common.environment import PkCentralEnv
 from app.common.types import AsyncDatabase
+from app.modules.activities.activities_utils import create_initial_activities_config
 from app.modules.auth.auth_utils import get_login_code
 from app.modules.reddit.reddit_utils import create_initial_reddit_config
 from app.modules.start_settings.start_settings_utils import create_initial_settings
@@ -74,8 +75,7 @@ async def create_initial_user(email: str, db: AsyncDatabase, logger: Logger) -> 
 
     logger.info(f"New user created with email: {email} (ID: {user['id']})")
     await create_initial_settings(db, logger, user["id"])
-    # TODO generate initial activities data for the user
-    logger.warning("Initial activities data generation is not implemented yet.")
+    await create_initial_activities_config(db, logger, user["id"])
     await create_initial_reddit_config(db, logger, user["id"])
 
     return user

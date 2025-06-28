@@ -334,3 +334,17 @@ class TestInitialUserConfigCreation:
         assert data["unsplashApiKey"] == "test-unspl-key"
         assert data["stravaClientId"] == "test-strava-id"
         assert data["stravaClientSecret"] == "test-strava-secret"
+
+        # Activities config
+        response = client.get(
+            "/activities",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "id" in data
+        assert data["chores"] == []
+        assert data["walkWeeklyGoal"] == 0
+        assert data["walkMonthlyGoal"] == 0
+        assert data["cyclingWeeklyGoal"] == 0
+        assert data["cyclingMonthlyGoal"] == 0
