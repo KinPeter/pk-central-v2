@@ -11,17 +11,17 @@ from app.common.logger import LoggingMiddleware, get_logger
 from app.common.version import get_version
 from app.modules.auth import auth
 from app.modules.reddit import reddit
+from app.modules.start_settings import start_settings
 
 load_dotenv()
 
-env = load_environment()
-
-allow_origins = get_allowed_origins(env)
+allow_origins = get_allowed_origins()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger = get_logger()
+    env = load_environment()
 
     db_manager = MongoDbManager(env, logger)
     db = await db_manager.connect()
@@ -54,4 +54,5 @@ app.add_middleware(
 app.add_middleware(LoggingMiddleware)
 
 app.include_router(auth.router)
+app.include_router(start_settings.router)
 app.include_router(reddit.router)

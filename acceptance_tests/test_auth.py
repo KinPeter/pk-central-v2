@@ -296,6 +296,14 @@ class TestInitialUserConfigCreation:
     def test_success(self, client, login_user):
         token, user_id, email = login_user
 
+        # Patch the env object on the app
+        client.app.state.env.OPEN_WEATHER_MAP_API_KEY = "test-owm-key"
+        client.app.state.env.LOCATION_IQ_API_KEY = "test-liq-key"
+        client.app.state.env.UNSPLASH_API_KEY = "test-unspl-key"
+        client.app.state.env.STRAVA_CLIENT_ID = "test-strava-id"
+        client.app.state.env.STRAVA_CLIENT_SECRET = "test-strava-secret"
+
+        # Reddit config
         response = client.get(
             "/reddit/config",
             headers={"Authorization": f"Bearer {token}"},
@@ -308,3 +316,21 @@ class TestInitialUserConfigCreation:
         assert data["sets"][0]["name"] == "Default"
         assert data["sets"][0]["subs"] == []
         assert data["sets"][0]["usernames"] == []
+
+        # Start settings
+        response = client.get(
+            "/start-settings/",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "id" in data
+        assert data["name"] is None
+        assert data["shortcutIconBaseUrl"] is None
+        assert data["birthdaysUrl"] is None
+        assert data["stravaRedirectUri"] is None
+        assert data["openWeatherApiKey"] == "test-owm-key"
+        assert data["locationIqApiKey"] == "test-liq-key"
+        assert data["unsplashApiKey"] == "test-unspl-key"
+        assert data["stravaClientId"] == "test-strava-id"
+        assert data["stravaClientSecret"] == "test-strava-secret"

@@ -7,6 +7,7 @@ from app.common.environment import PkCentralEnv
 from app.common.types import AsyncDatabase
 from app.modules.auth.auth_utils import get_login_code
 from app.modules.reddit.reddit_utils import create_initial_reddit_config
+from app.modules.start_settings.start_settings_utils import create_initial_settings
 
 
 async def sign_up_or_login_user(
@@ -72,8 +73,7 @@ async def create_initial_user(email: str, db: AsyncDatabase, logger: Logger) -> 
     await users_collection.insert_one(user)
 
     logger.info(f"New user created with email: {email} (ID: {user['id']})")
-    # TODO generate initial settings for the user
-    logger.warning("Initial settings generation is not implemented yet.")
+    await create_initial_settings(db, logger, user["id"])
     # TODO generate initial activities data for the user
     logger.warning("Initial activities data generation is not implemented yet.")
     await create_initial_reddit_config(db, logger, user["id"])

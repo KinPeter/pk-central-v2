@@ -19,6 +19,10 @@ class DbCollection(str, Enum):
     STRAVA_ACTIVITIES = "strava_activities"
     STRAVA_SYNC_META = "strava_sync_metadata"
     REDDIT = "reddit"
+    # Static data collections
+    AIRLINES = "airlines"
+    AIRPORTS = "airports"
+    AIRCRAFTS = "aircrafts"
 
 
 class MongoDbManager:

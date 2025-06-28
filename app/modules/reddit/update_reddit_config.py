@@ -19,7 +19,11 @@ async def update_reddit_config(
         collection = db.get_collection(DbCollection.REDDIT)
         result = await collection.update_one(
             {"user_id": user.id},
-            {"$set": body.model_dump(exclude_none=True, exclude_unset=True)},
+            {
+                "$set": body.model_dump(
+                    exclude_none=True, exclude_unset=True, mode="json"
+                )
+            },
         )
 
         if result.matched_count == 0:

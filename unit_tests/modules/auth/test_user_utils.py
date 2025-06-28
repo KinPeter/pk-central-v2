@@ -153,10 +153,18 @@ class TestCreateInitialUser:
         with patch(
             "app.modules.auth.user_utils.create_initial_reddit_config",
             new_callable=AsyncMock,
-        ) as mock_create_initial_reddit_config:
+        ) as mock_create_initial_reddit_config, patch(
+            "app.modules.auth.user_utils.create_initial_settings",
+            new_callable=AsyncMock,
+        ) as mock_create_initial_settings:
+            mock_create_initial_reddit_config.return_value = None
+            mock_create_initial_settings.return_value = None
             user = await create_initial_user(email, db, logger)
             db.get_collection.return_value.insert_one.assert_awaited_once()
             mock_create_initial_reddit_config.assert_awaited_once_with(
+                db, logger, user["id"]
+            )
+            mock_create_initial_settings.assert_awaited_once_with(
                 db, logger, user["id"]
             )
             assert user["email"] == email
@@ -172,12 +180,11 @@ class TestCreateInitialUser:
     async def test_logger_called(self, db, logger):
         email = "logtest@example.com"
         db.get_collection.return_value.insert_one = AsyncMock()
-        with patch("app.modules.auth.user_utils.create_initial_reddit_config"):
+        with patch("app.modules.auth.user_utils.create_initial_reddit_config"), patch(
+            "app.modules.auth.user_utils.create_initial_settings"
+        ):
             user = await create_initial_user(email, db, logger)
             logger.info.assert_called()
-            logger.warning.assert_any_call(
-                "Initial settings generation is not implemented yet."
-            )
             logger.warning.assert_any_call(
                 "Initial activities data generation is not implemented yet."
             )

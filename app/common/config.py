@@ -1,7 +1,9 @@
-from app.common.environment import PkCentralEnv
+import os
 
 
-def get_allowed_origins(env: PkCentralEnv) -> list[str]:
+def get_allowed_origins() -> list[str]:
+    pk_env = os.getenv("PK_ENV", "prod").lower()
+
     allow_origins = [
         "https://p-kin.com",
         "https://www.p-kin.com",
@@ -13,7 +15,7 @@ def get_allowed_origins(env: PkCentralEnv) -> list[str]:
         "https://rddit.p-kin.com",
     ]
 
-    if env.PK_ENV == "dev":
+    if pk_env == "dev":
         allow_origins.append("http://localhost:5499")
 
     return allow_origins

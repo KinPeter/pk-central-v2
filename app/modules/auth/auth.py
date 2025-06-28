@@ -142,17 +142,3 @@ async def post_set_password(
     This works for setting a password for the first time or updating an existing password.
     """
     return await set_password(body, request, user)
-
-
-class TestListItem(PkBaseModel):
-    name: str
-
-
-@router.get(path="/list")
-async def get_list() -> ListResponse[TestListItem]:
-    """
-    Test endpoint to return a list of items.
-    """
-    return ListResponse[TestListItem](
-        entities=[TestListItem(name="Item 1"), TestListItem(name="Item 2")]
-    )
