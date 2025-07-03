@@ -15,5 +15,5 @@ class NoteRequest(PkBaseModel):
     pinned: bool = False
 
 
-class Note(OkResponse, BaseEntity, NoteRequest):
+class Note(BaseEntity, NoteRequest):
     pass
