@@ -13,6 +13,7 @@ from app.modules.activities import activities
 from app.modules.auth import auth
 from app.modules.notes import notes
 from app.modules.reddit import reddit
+from app.modules.shortcuts import shortcuts
 from app.modules.start_settings import start_settings
 
 load_dotenv()
@@ -58,5 +59,6 @@ app.add_middleware(LoggingMiddleware)
 app.include_router(auth.router)
 app.include_router(start_settings.router)
 app.include_router(notes.router)
+app.include_router(shortcuts.router)
 app.include_router(activities.router)
 app.include_router(reddit.router)
