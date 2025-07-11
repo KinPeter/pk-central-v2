@@ -9,7 +9,7 @@ class TestCreateAndGetShortcuts:
         shortcut_data = {
             "name": "Google",
             "url": "https://google.com/",
-            "icon_url": "https://google.com/icon.png",
+            "iconUrl": "https://google.com/icon.png",
             "category": "GOOGLE",
             "priority": 1,
         }
@@ -22,7 +22,7 @@ class TestCreateAndGetShortcuts:
         created_shortcut = response.json()
         assert created_shortcut["name"] == shortcut_data["name"]
         assert created_shortcut["url"] == shortcut_data["url"]
-        assert created_shortcut["iconUrl"] == shortcut_data["icon_url"]
+        assert created_shortcut["iconUrl"] == shortcut_data["iconUrl"]
         assert created_shortcut["category"] == shortcut_data["category"]
         assert created_shortcut["priority"] == shortcut_data["priority"]
 
@@ -30,7 +30,7 @@ class TestCreateAndGetShortcuts:
         shortcut_data2 = {
             "name": "GitHub",
             "url": "https://github.com/",
-            "icon_url": "https://github.com/icon.png",
+            "iconUrl": "https://github.com/icon.png",
             "category": "CODING",
             "priority": 2,
         }
@@ -43,7 +43,7 @@ class TestCreateAndGetShortcuts:
         created_shortcut2 = response.json()
         assert created_shortcut2["name"] == shortcut_data2["name"]
         assert created_shortcut2["url"] == shortcut_data2["url"]
-        assert created_shortcut2["iconUrl"] == shortcut_data2["icon_url"]
+        assert created_shortcut2["iconUrl"] == shortcut_data2["iconUrl"]
         assert created_shortcut2["category"] == shortcut_data2["category"]
         assert created_shortcut2["priority"] == shortcut_data2["priority"]
 
@@ -58,12 +58,12 @@ class TestCreateAndGetShortcuts:
         assert len(shortcuts) == 2
         assert shortcuts[0]["name"] == shortcut_data["name"]
         assert shortcuts[0]["url"] == shortcut_data["url"]
-        assert shortcuts[0]["iconUrl"] == shortcut_data["icon_url"]
+        assert shortcuts[0]["iconUrl"] == shortcut_data["iconUrl"]
         assert shortcuts[0]["category"] == shortcut_data["category"]
         assert shortcuts[0]["priority"] == shortcut_data["priority"]
         assert shortcuts[1]["name"] == shortcut_data2["name"]
         assert shortcuts[1]["url"] == shortcut_data2["url"]
-        assert shortcuts[1]["iconUrl"] == shortcut_data2["icon_url"]
+        assert shortcuts[1]["iconUrl"] == shortcut_data2["iconUrl"]
         assert shortcuts[1]["category"] == shortcut_data2["category"]
         assert shortcuts[1]["priority"] == shortcut_data2["priority"]
 
@@ -75,7 +75,7 @@ class TestCreateAndGetShortcuts:
             json={
                 "name": "Google",
                 "url": "https://google.com/",
-                "icon_url": "https://google.com/icon.png",
+                "iconUrl": "https://google.com/icon.png",
                 "category": "GOOGLE",
                 "priority": 1,
             },
@@ -91,7 +91,7 @@ class TestCreateAndGetShortcuts:
         shortcut_data = {
             "name": "Google",
             "url": "https://google.com/",
-            "icon_url": "https://google.com/icon.png",
+            "iconUrl": "https://google.com/icon.png",
             "category": "GOOGLE",
             "priority": 1,
         }
@@ -118,7 +118,7 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "Google",
                     "url": "not-a-url",
-                    "icon_url": "https://google.com/icon.png",
+                    "iconUrl": "https://google.com/icon.png",
                     "category": "GOOGLE",
                     "priority": 1,
                 },
@@ -128,7 +128,7 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "",
                     "url": "https://google.com/",
-                    "icon_url": "https://google.com/icon.png",
+                    "iconUrl": "https://google.com/icon.png",
                     "category": "GOOGLE",
                     "priority": 1,
                 },
@@ -138,7 +138,7 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "a" * 101,  # Exceeding max length
                     "url": "https://google.com/",
-                    "icon_url": "https://google.com/icon.png",
+                    "iconUrl": "https://google.com/icon.png",
                     "category": "GOOGLE",
                     "priority": 1,
                 },
@@ -148,7 +148,7 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "Google",
                     "url": "https://google.com/",
-                    "icon_url": "not-a-url",
+                    "iconUrl": "not-a-url",
                     "category": "GOOGLE",
                     "priority": 1,
                 },
@@ -158,7 +158,7 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "Google",
                     "url": "https://google.com/",
-                    "icon_url": "https://google.com/icon.png",
+                    "iconUrl": "https://google.com/icon.png",
                     "category": "INVALID",
                     "priority": 1,
                 },
@@ -168,7 +168,7 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "Google",
                     "url": "https://google.com/",
-                    "icon_url": "https://google.com/icon.png",
+                    "iconUrl": "https://google.com/icon.png",
                     "category": "GOOGLE",
                     "priority": 0,
                 },
@@ -179,7 +179,7 @@ class TestCreateAndGetShortcuts:
                 {
                     # missing 'name'
                     "url": "https://google.com/",
-                    "icon_url": "https://google.com/icon.png",
+                    "iconUrl": "https://google.com/icon.png",
                     "category": "GOOGLE",
                     "priority": 1,
                 },
@@ -189,7 +189,7 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "Google",
                     # missing 'url'
-                    "icon_url": "https://google.com/icon.png",
+                    "iconUrl": "https://google.com/icon.png",
                     "category": "GOOGLE",
                     "priority": 1,
                 },
@@ -199,7 +199,7 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "Google",
                     "url": "https://google.com/",
-                    # missing 'icon_url'
+                    # missing 'iconUrl'
                     "category": "GOOGLE",
                     "priority": 1,
                 },
@@ -209,7 +209,7 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "Google",
                     "url": "https://google.com/",
-                    "icon_url": "https://google.com/icon.png",
+                    "iconUrl": "https://google.com/icon.png",
                     # missing 'category'
                     "priority": 1,
                 },
@@ -219,7 +219,7 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "Google",
                     "url": "https://google.com/",
-                    "icon_url": "https://google.com/icon.png",
+                    "iconUrl": "https://google.com/icon.png",
                     "category": "GOOGLE",
                     # missing 'priority'
                 },
@@ -248,7 +248,7 @@ class TestUpdateShortcut:
         shortcut_data = {
             "name": "Google",
             "url": "https://google.com/",
-            "icon_url": "https://google.com/icon.png",
+            "iconUrl": "https://google.com/icon.png",
             "category": "GOOGLE",
             "priority": 1,
         }
@@ -264,7 +264,7 @@ class TestUpdateShortcut:
         update_data = {
             "name": "Google Updated",
             "url": "https://google.com/updated/",
-            "icon_url": "https://google.com/icon-updated.png",
+            "iconUrl": "https://google.com/icon-updated.png",
             "category": "GOOGLE",
             "priority": 2,
         }
@@ -277,7 +277,7 @@ class TestUpdateShortcut:
         updated_shortcut = response.json()
         assert updated_shortcut["name"] == update_data["name"]
         assert updated_shortcut["url"] == update_data["url"]
-        assert updated_shortcut["iconUrl"] == update_data["icon_url"]
+        assert updated_shortcut["iconUrl"] == update_data["iconUrl"]
         assert updated_shortcut["category"] == update_data["category"]
         assert updated_shortcut["priority"] == update_data["priority"]
         # Get all shortcuts to verify update
@@ -299,7 +299,7 @@ class TestUpdateShortcut:
         shortcut_data = {
             "name": "Google",
             "url": "https://google.com/",
-            "icon_url": "https://google.com/icon.png",
+            "iconUrl": "https://google.com/icon.png",
             "category": "GOOGLE",
             "priority": 1,
         }
@@ -315,7 +315,7 @@ class TestUpdateShortcut:
         update_data = {
             "name": "Google Updated",
             "url": "https://google.com/updated/",
-            "icon_url": "https://google.com/icon-updated.png",
+            "iconUrl": "https://google.com/icon-updated.png",
             "category": "GOOGLE",
             "priority": 2,
         }
@@ -335,7 +335,7 @@ class TestUpdateShortcut:
         update_data = {
             "name": "Google Updated",
             "url": "https://google.com/updated/",
-            "icon_url": "https://google.com/icon-updated.png",
+            "iconUrl": "https://google.com/icon-updated.png",
             "category": "GOOGLE",
             "priority": 2,
         }
@@ -356,7 +356,7 @@ class TestUpdateShortcut:
                 {
                     "name": "Google Updated",
                     "url": "not-a-url",
-                    "icon_url": "https://google.com/icon-updated.png",
+                    "iconUrl": "https://google.com/icon-updated.png",
                     "category": "GOOGLE",
                     "priority": 2,
                 },
@@ -366,7 +366,7 @@ class TestUpdateShortcut:
                 {
                     "name": "",
                     "url": "https://google.com/updated/",
-                    "icon_url": "https://google.com/icon-updated.png",
+                    "iconUrl": "https://google.com/icon-updated.png",
                     "category": "GOOGLE",
                     "priority": 2,
                 },
@@ -376,7 +376,7 @@ class TestUpdateShortcut:
                 {
                     "name": "a" * 101,  # Exceeding max length
                     "url": "https://google.com/updated/",
-                    "icon_url": "https://google.com/icon-updated.png",
+                    "iconUrl": "https://google.com/icon-updated.png",
                     "category": "GOOGLE",
                     "priority": 2,
                 },
@@ -386,7 +386,7 @@ class TestUpdateShortcut:
                 {
                     "name": "Google Updated",
                     "url": "https://google.com/updated/",
-                    "icon_url": "not-a-url",
+                    "iconUrl": "not-a-url",
                     "category": "GOOGLE",
                     "priority": 2,
                 },
@@ -396,7 +396,7 @@ class TestUpdateShortcut:
                 {
                     "name": "Google Updated",
                     "url": "https://google.com/updated/",
-                    "icon_url": "https://google.com/icon-updated.png",
+                    "iconUrl": "https://google.com/icon-updated.png",
                     "category": "INVALID",
                     "priority": 2,
                 },
@@ -406,7 +406,7 @@ class TestUpdateShortcut:
                 {
                     "name": "Google Updated",
                     "url": "https://google.com/updated/",
-                    "icon_url": "https://google.com/icon-updated.png",
+                    "iconUrl": "https://google.com/icon-updated.png",
                     "category": "GOOGLE",
                     "priority": 0,
                 },
@@ -417,7 +417,7 @@ class TestUpdateShortcut:
                 {
                     # missing 'name'
                     "url": "https://google.com/updated/",
-                    "icon_url": "https://google.com/icon-updated.png",
+                    "iconUrl": "https://google.com/icon-updated.png",
                     "category": "GOOGLE",
                     "priority": 2,
                 },
@@ -427,7 +427,7 @@ class TestUpdateShortcut:
                 {
                     "name": "Google Updated",
                     # missing 'url'
-                    "icon_url": "https://google.com/icon-updated.png",
+                    "iconUrl": "https://google.com/icon-updated.png",
                     "category": "GOOGLE",
                     "priority": 2,
                 },
@@ -437,7 +437,7 @@ class TestUpdateShortcut:
                 {
                     "name": "Google Updated",
                     "url": "https://google.com/updated/",
-                    # missing 'icon_url'
+                    # missing 'iconUrl'
                     "category": "GOOGLE",
                     "priority": 2,
                 },
@@ -447,7 +447,7 @@ class TestUpdateShortcut:
                 {
                     "name": "Google Updated",
                     "url": "https://google.com/updated/",
-                    "icon_url": "https://google.com/icon-updated.png",
+                    "iconUrl": "https://google.com/icon-updated.png",
                     # missing 'category'
                     "priority": 2,
                 },
@@ -457,7 +457,7 @@ class TestUpdateShortcut:
                 {
                     "name": "Google Updated",
                     "url": "https://google.com/updated/",
-                    "icon_url": "https://google.com/icon-updated.png",
+                    "iconUrl": "https://google.com/icon-updated.png",
                     "category": "GOOGLE",
                     # missing 'priority'
                 },
@@ -471,7 +471,7 @@ class TestUpdateShortcut:
         shortcut_data = {
             "name": "Google",
             "url": "https://google.com/",
-            "icon_url": "https://google.com/icon.png",
+            "iconUrl": "https://google.com/icon.png",
             "category": "GOOGLE",
             "priority": 1,
         }
@@ -503,7 +503,7 @@ class TestDeleteShortcut:
         shortcut_data = {
             "name": "To Delete",
             "url": "https://delete.com/",
-            "icon_url": "https://delete.com/icon.png",
+            "iconUrl": "https://delete.com/icon.png",
             "category": "OTHERS",
             "priority": 3,
         }
@@ -530,7 +530,7 @@ class TestDeleteShortcut:
         shortcut_data = {
             "name": "To Delete",
             "url": "https://delete.com/",
-            "icon_url": "https://delete.com/icon.png",
+            "iconUrl": "https://delete.com/icon.png",
             "category": "OTHERS",
             "priority": 3,
         }
