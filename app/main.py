@@ -12,6 +12,7 @@ from app.common.version import get_version
 from app.modules.activities import activities
 from app.modules.auth import auth
 from app.modules.notes import notes
+from app.modules.personal_data import personal_data
 from app.modules.reddit import reddit
 from app.modules.shortcuts import shortcuts
 from app.modules.start_settings import start_settings
@@ -60,5 +61,6 @@ app.include_router(auth.router)
 app.include_router(start_settings.router)
 app.include_router(notes.router)
 app.include_router(shortcuts.router)
+app.include_router(personal_data.router)
 app.include_router(activities.router)
 app.include_router(reddit.router)
