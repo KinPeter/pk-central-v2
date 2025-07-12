@@ -28,7 +28,6 @@ async def get_start_settings(request: Request, user: CurrentUser) -> StartSettin
             created_at=data["created_at"],
             name=data["name"],
             shortcut_icon_base_url=data["shortcut_icon_base_url"],
-            birthdays_url=data["birthdays_url"],
             strava_redirect_uri=data["strava_redirect_uri"],
             open_weather_api_key=env.OPEN_WEATHER_MAP_API_KEY,
             location_iq_api_key=env.LOCATION_IQ_API_KEY,

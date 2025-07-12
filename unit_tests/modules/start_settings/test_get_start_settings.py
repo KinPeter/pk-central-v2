@@ -33,7 +33,6 @@ async def test_get_start_settings_success(mock_request, mock_user):
         "created_at": "2024-01-01T00:00:00Z",
         "name": "MyName",
         "shortcut_icon_base_url": "http://icons/",
-        "birthdays_url": "http://bday/",
         "strava_redirect_uri": "http://strava/",
         "user_id": mock_user.id,
     }
@@ -45,7 +44,6 @@ async def test_get_start_settings_success(mock_request, mock_user):
     assert result.id == "cfg1"
     assert result.name == "MyName"
     assert result.shortcut_icon_base_url == "http://icons/"
-    assert result.birthdays_url == "http://bday/"
     assert result.strava_redirect_uri == "http://strava/"
     assert result.open_weather_api_key == "owm-key"
     assert result.location_iq_api_key == "liq-key"

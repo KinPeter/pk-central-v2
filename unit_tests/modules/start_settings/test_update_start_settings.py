@@ -45,7 +45,6 @@ async def test_update_start_settings_success(mock_request, mock_user, mock_body)
         "created_at": "2024-01-01T00:00:00Z",
         "name": "UpdatedName",
         "shortcut_icon_base_url": "http://icons/",
-        "birthdays_url": "http://bday/",
         "strava_redirect_uri": "http://strava/",
         "user_id": mock_user.id,
     }

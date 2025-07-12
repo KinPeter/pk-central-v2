@@ -327,7 +327,6 @@ class TestInitialUserConfigCreation:
         assert "id" in data
         assert data["name"] is None
         assert data["shortcutIconBaseUrl"] is None
-        assert data["birthdaysUrl"] is None
         assert data["stravaRedirectUri"] is None
         assert data["openWeatherApiKey"] == "test-owm-key"
         assert data["locationIqApiKey"] == "test-liq-key"

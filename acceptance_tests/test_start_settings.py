@@ -22,7 +22,6 @@ class TestUpdateAndGetStartSettings:
         assert "id" in data
         assert data["name"] is None
         assert data["shortcutIconBaseUrl"] is None
-        assert data["birthdaysUrl"] is None
         assert data["stravaRedirectUri"] is None
         assert data["openWeatherApiKey"] == "test-owm-key"
         assert data["locationIqApiKey"] == "test-liq-key"
@@ -34,7 +33,6 @@ class TestUpdateAndGetStartSettings:
         update_data = {
             "name": "My Start Settings",
             "shortcutIconBaseUrl": "http://icons/",
-            "birthdaysUrl": "http://bday/",
             "stravaRedirectUri": "http://strava/",
         }
         response = client.put(
@@ -46,7 +44,6 @@ class TestUpdateAndGetStartSettings:
         updated_data = response.json()
         assert updated_data["name"] == "My Start Settings"
         assert updated_data["shortcutIconBaseUrl"] == "http://icons/"
-        assert updated_data["birthdaysUrl"] == "http://bday/"
         assert updated_data["stravaRedirectUri"] == "http://strava/"
         assert updated_data["id"] == data["id"]
         assert data["openWeatherApiKey"] == "test-owm-key"
@@ -64,7 +61,6 @@ class TestUpdateAndGetStartSettings:
         final_data = response.json()
         assert final_data["name"] == "My Start Settings"
         assert final_data["shortcutIconBaseUrl"] == "http://icons/"
-        assert final_data["birthdaysUrl"] == "http://bday/"
         assert final_data["stravaRedirectUri"] == "http://strava/"
         assert final_data["id"] == data["id"]
         assert data["openWeatherApiKey"] == "test-owm-key"
@@ -91,7 +87,6 @@ class TestUpdateAndGetStartSettings:
         [
             ({"name": 12345}, "str", "string"),
             ({"shortcutIconBaseUrl": "not-a-url"}, "url", "url"),
-            ({"birthdaysUrl": "htp:/bad-url"}, "url", "url"),
             ({"stravaRedirectUri": 12345}, "url", "url"),
             ({"shortcutIconBaseUrl": 12345}, "url", "url"),
         ],

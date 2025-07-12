@@ -21,7 +21,6 @@ async def create_initial_settings(
         "created_at": datetime.now(timezone.utc),
         "name": None,
         "shortcut_icon_base_url": None,
-        "birthdays_url": None,
         "strava_redirect_uri": None,
     }
 

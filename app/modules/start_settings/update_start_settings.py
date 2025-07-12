@@ -43,7 +43,6 @@ async def update_start_settings(
             created_at=updated_data["created_at"],
             name=updated_data["name"],
             shortcut_icon_base_url=updated_data["shortcut_icon_base_url"],
-            birthdays_url=updated_data["birthdays_url"],
             strava_redirect_uri=updated_data["strava_redirect_uri"],
             open_weather_api_key=env.OPEN_WEATHER_MAP_API_KEY,
             location_iq_api_key=env.LOCATION_IQ_API_KEY,

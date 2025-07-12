@@ -6,7 +6,6 @@ from pydantic import HttpUrl
 class StartSettings(OkResponse, BaseEntity):
     name: str | None = None
     shortcut_icon_base_url: str | None = None
-    birthdays_url: str | None = None
     strava_redirect_uri: str | None = None
     # coming from environment variables:
     open_weather_api_key: str | None = None
@@ -19,5 +18,4 @@ class StartSettings(OkResponse, BaseEntity):
 class StartSettingsRequest(PkBaseModel):
     name: str | None = None
     shortcut_icon_base_url: HttpUrl | None = None
-    birthdays_url: HttpUrl | None = None
     strava_redirect_uri: HttpUrl | None = None
