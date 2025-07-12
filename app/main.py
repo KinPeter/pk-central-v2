@@ -16,6 +16,7 @@ from app.modules.personal_data import personal_data
 from app.modules.reddit import reddit
 from app.modules.shortcuts import shortcuts
 from app.modules.start_settings import start_settings
+from app.modules.visits import visits
 
 load_dotenv()
 
@@ -63,4 +64,5 @@ app.include_router(notes.router)
 app.include_router(shortcuts.router)
 app.include_router(personal_data.router)
 app.include_router(activities.router)
+app.include_router(visits.router)
 app.include_router(reddit.router)
