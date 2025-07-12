@@ -11,6 +11,7 @@ from app.common.logger import LoggingMiddleware, get_logger
 from app.common.version import get_version
 from app.modules.activities import activities
 from app.modules.auth import auth
+from app.modules.birthdays import birthdays
 from app.modules.notes import notes
 from app.modules.personal_data import personal_data
 from app.modules.proxy import proxy
@@ -65,6 +66,7 @@ app.include_router(notes.router)
 app.include_router(shortcuts.router)
 app.include_router(personal_data.router)
 app.include_router(activities.router)
+app.include_router(birthdays.router)
 app.include_router(visits.router)
 app.include_router(proxy.router)
 app.include_router(reddit.router)
