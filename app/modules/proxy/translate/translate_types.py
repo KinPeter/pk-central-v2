@@ -1,5 +1,7 @@
 from enum import Enum
 
+from pydantic import Field
+
 from app.common.responses import OkResponse
 from app.common.types import PkBaseModel
 
@@ -60,7 +62,7 @@ target_languages = {
 
 
 class TranslationRequest(PkBaseModel):
-    text: str
+    text: str = Field(..., min_length=1)
     source_lang: DeeplLanguage
     target_lang: DeeplLanguage
 
