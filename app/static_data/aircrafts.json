@@ -2604,14 +2604,6 @@
     "name": "Boeing 737-700 BBJ"
   },
   {
-    "icao": "B737",
-    "name": "Boeing C-40"
-  },
-  {
-    "icao": "B737",
-    "name": "Boeing C-40 Clipper"
-  },
-  {
     "icao": "B738",
     "name": "Boeing 737-800"
   },
@@ -2626,6 +2618,10 @@
   {
     "icao": "B739",
     "name": "Boeing 737-900 BBJ3"
+  },
+  {
+    "icao": "B73X",
+    "name": "Boeing 737"
   },
   {
     "icao": "B741",
@@ -2845,7 +2841,7 @@
   },
   {
     "icao": "BCS3",
-    "name": "Airbus A-220-300"
+    "name": "Airbus A-220-300 (Bombardier CS300)"
   },
   {
     "icao": "BCS3",

@@ -12,6 +12,9 @@ services:
       driver: none
     volumes:
       - ./acc-test.mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./acc-test-seed.sh:/docker-entrypoint-initdb.d/99-seed.sh:ro
+      - ../app/static_data/aircrafts.json:/app/static_data/aircrafts.json:ro
+      - ../app/static_data/airlines.json:/app/static_data/airlines.json:ro
     networks:
       - central_v2_acc-test-network
 
