@@ -42,7 +42,11 @@ deploy:
 
 # ===
 # Seeding and backups
-# Run a seed script. Needs the FILE variable e.g. `make seed-init-v2 FILE=static_data`
+# Run a seed script for initial V2 data. Needs the FILE variable e.g. `make seed-init-v2 FILE=static_data`
 # ===
 seed-init-v2:
 	PYTHONPATH=. python local/seed_init_v2/seed_$(FILE).py
+
+# Run a seed script for V1 backup data. Needs the FILE variable e.g. `make seed-v1 FILE=activities`
+seed-v1:
+	PYTHONPATH=. python local/seed_v1_backup/seed_$(FILE).py

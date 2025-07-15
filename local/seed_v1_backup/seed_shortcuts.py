@@ -10,16 +10,26 @@ def seed():
     seeder = Seeder()
     base_url, headers = seeder.get_api_credentials()
 
-    file_path = Path(__file__).resolve().parents[2] / ".temp" / "bdays.json"
+    file_path = Path(__file__).resolve().parents[2] / ".temp" / "v1_backup.json"
 
     with open(file_path, "r") as f:
-        data = json.load(f)
+        backup = json.load(f)
 
+    data = backup["shortcuts"]
     success = 0
     failure = 0
 
     for item in data:
-        response = requests.post(f"{base_url}/birthdays/", headers=headers, json=item)
+        body = {
+            "name": item["name"],
+            "url": item["url"],
+            "iconUrl": item["iconUrl"],
+            "priority": item["priority"],
+            "category": (
+                item["category"] if item["category"] != "CYCLING" else "HOBBIES"
+            ),
+        }
+        response = requests.post(f"{base_url}/shortcuts/", headers=headers, json=body)
         if response.status_code == 201:
             success += 1
             print(f"Item {item['name']} seeded successfully.")
@@ -27,7 +37,7 @@ def seed():
             failure += 1
             print(f"Failed to seed item {item['name']}: {response.text}")
 
-        sleep(1)  # To avoid hitting the API too fast
+        sleep(0.2)  # To avoid hitting the API too fast
 
     print(f"Seeding completed: {success} items successful, {failure} items failed.")
 
