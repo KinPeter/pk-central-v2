@@ -117,3 +117,29 @@ In case of failure you have to manually clear the docker volumes:
 ```bash
 make clear-test-docker
 ```
+
+## Dumping and restoring MongoDB data
+
+Dumping and restoring MongoDB data can be done using the `mongodump` and `mongorestore` commands.
+To use these commands, you need to have the MongoDB Database Tools installed.
+
+### Install MongoDB Database Tools
+
+- [Documentation](https://www.mongodb.com/docs/database-tools/installation/installation-linux/)
+- [Download Center](https://www.mongodb.com/try/download/database-tools)
+
+### Dumping data
+
+To dump data from a MongoDB database, use the `mongodump` command. For example:
+
+```bash
+mongodump --uri "mongodb+srv://<username>:<password>@<cluster-url>/<dbname>" --out ./dump
+```
+
+### Restoring data
+
+To restore data to a MongoDB database, use the `mongorestore` command. For example:
+
+```bash
+mongorestore --uri "mongodb+srv://<username>:<password>@<cluster-url>/" --db <dbname> --drop ./dump/<dbname>
+```
