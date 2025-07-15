@@ -148,11 +148,11 @@ class TestCreateAndGetShortcuts:
                 {
                     "name": "Google",
                     "url": "https://google.com/",
-                    "iconUrl": "not-a-url",
+                    "iconUrl": "",
                     "category": "GOOGLE",
                     "priority": 1,
                 },
-                "valid URL",
+                "at least 1 character",
             ),
             (
                 {
@@ -386,11 +386,11 @@ class TestUpdateShortcut:
                 {
                     "name": "Google Updated",
                     "url": "https://google.com/updated/",
-                    "iconUrl": "not-a-url",
+                    "iconUrl": "",
                     "category": "GOOGLE",
                     "priority": 2,
                 },
-                "valid URL",
+                "at least 1 character",
             ),
             (
                 {

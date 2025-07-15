@@ -16,7 +16,7 @@ class ShortcutCategory(str, Enum):
 class ShortcutRequest(PkBaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     url: HttpUrl
-    icon_url: HttpUrl
+    icon_url: str = Field(..., min_length=1, max_length=100)
     category: ShortcutCategory
     priority: int = Field(..., ge=1, le=10)
 
