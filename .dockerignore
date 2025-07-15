@@ -47,4 +47,5 @@ Thumbs.db
 dev-db/
 unit-tests/
 .pytest_cache/
+mailer/
 
