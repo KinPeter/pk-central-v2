@@ -12,6 +12,7 @@ from app.common.version import get_version
 from app.modules.activities import activities
 from app.modules.auth import auth
 from app.modules.birthdays import birthdays
+from app.modules.data_backup import data_backup
 from app.modules.flights import flights
 from app.modules.notes import notes
 from app.modules.personal_data import personal_data
@@ -70,3 +71,4 @@ app.include_router(flights.router)
 app.include_router(visits.router)
 app.include_router(proxy.router)
 app.include_router(reddit.router)
+app.include_router(data_backup.router)

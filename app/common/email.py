@@ -7,20 +7,24 @@ from app.common.environment import PkCentralEnv
 from app.common.responses import InternalServerErrorException, NotImplementedException
 
 
+class EmailAttachment:
+    def __init__(self, content: str, filename: str):
+        self.content = content
+        self.filename = filename
+
+
 class PkMailData:
     def __init__(
         self,
         subject: str,
         to: str,
         html: str,
-        attachment_content: str | None = None,
-        attachment_filename: str | None = None,
+        attachments: list[EmailAttachment] | None = None,
     ):
         self.subject = subject
         self.to = to
         self.html = html
-        self.attachment_content = attachment_content
-        self.attachment_filename = attachment_filename
+        self.attachments = attachments
 
 
 class EmailManager:
@@ -42,24 +46,37 @@ class EmailManager:
         email_data = PkMailData(subject, email, html)
         self.send_email(email_data)
 
-    def send_data_backup(self, name: str):
-        # FIXME - Implement data backup email functionality first
-        raise NotImplementedException(
-            "Data backup email functionality is not implemented yet."
+    def send_data_backup(
+        self,
+        name: str,
+        email: str,
+        files: list[EmailAttachment],
+    ):
+        subject = "Data backup for PK-Central"
+        text, html = self.templates.data_backup(name)
+        email_data = PkMailData(
+            subject=subject,
+            to=email,
+            html=html,
+            attachments=files,
         )
+        self.send_email(email_data)
 
     def send_email(self, email_data: PkMailData):
         # Need to fake the user agent because tarhelypark blocks python-requests
         headers = {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json"}
-        payload = {
+        payload: dict[str, str | list[dict]] = {
             "apiKey": self.api_key,
             "subject": email_data.subject,
             "to": email_data.to,
             "html": email_data.html,
         }
-        if email_data.attachment_content and email_data.attachment_filename:
-            payload["attachmentContent"] = email_data.attachment_content
-            payload["attachmentFilename"] = email_data.attachment_filename
+
+        if email_data.attachments and len(email_data.attachments) > 0:
+            payload["attachments"] = [
+                {"content": att.content, "filename": att.filename}
+                for att in email_data.attachments
+            ]
 
         try:
             response = requests.post(
@@ -167,10 +184,10 @@ class EmailTemplates:
     def data_backup(self, name: str) -> tuple[str, str]:
         html = f"""
         <h3>Hey {name}!</h3>
-        <p>As requested, please find attached the backup file of your data.</p>
+        <p>As requested, please find attached the backup files of your data.</p>
         """
         text = f"""
         Hey {name}!
-        As requested, please find attached the backup file of your data.
+        As requested, please find attached the backup files of your data.
         """
         return (text, html)
