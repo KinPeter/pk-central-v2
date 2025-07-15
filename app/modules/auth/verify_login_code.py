@@ -42,7 +42,7 @@ async def login_code_verify(body: CodeLoginRequest, request: Request) -> LoginRe
         )
 
         return LoginResponse(
-            email=email, id=user["id"], token=token, expires_at=expires_at
+            email=email, id=user["id"], token=token, expires_at=expires_at.isoformat()
         )
 
     except UnauthorizedException as e:

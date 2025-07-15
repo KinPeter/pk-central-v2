@@ -1,4 +1,3 @@
-from calendar import c
 from fastapi import Request
 
 from app.common.db import DbCollection
@@ -24,7 +23,6 @@ async def get_activities(request: Request, user: CurrentUser) -> ActivitiesConfi
 
         return ActivitiesConfig(
             id=data["id"],
-            created_at=data["created_at"],
             chores=data["chores"],
             walk_weekly_goal=data["walk_weekly_goal"],
             walk_monthly_goal=data["walk_monthly_goal"],

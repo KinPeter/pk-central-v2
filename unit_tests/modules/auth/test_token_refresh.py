@@ -41,7 +41,7 @@ class TestTokenRefresh:
             response = await token_refresh(request_obj, user)
             assert isinstance(response, LoginResponse)
             assert response.token == token
-            assert response.expires_at == expires_at
+            assert response.expires_at == expires_at.isoformat()
             assert response.email == user.email
             assert response.id == user.id
             mock_get_access_token.assert_called_once_with(

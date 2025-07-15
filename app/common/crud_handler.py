@@ -75,7 +75,12 @@ class CrudHandler[T]:
                 f"An error occurred while retrieving the {self.entity_name}: " + str(e)
             )
 
-    async def create(self, body: PkBaseModel, mapper_fn: Callable[[dict], T]) -> T:
+    async def create(
+        self,
+        body: PkBaseModel,
+        mapper_fn: Callable[[dict], T],
+        create_timestamp: bool = False,
+    ) -> T:
         """
         Create a new entity for the current user.
         """
@@ -85,7 +90,8 @@ class CrudHandler[T]:
             )
             entity_data["id"] = str(uuid.uuid4())
             entity_data["user_id"] = self.user.id
-            entity_data["created_at"] = datetime.now(timezone.utc)
+            if create_timestamp:
+                entity_data["created_at"] = datetime.now(timezone.utc).isoformat()
 
             result = await self.collection.insert_one(entity_data)
             if not result.acknowledged:

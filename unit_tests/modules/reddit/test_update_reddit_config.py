@@ -39,7 +39,6 @@ async def test_update_reddit_config_success(mock_request, mock_user, mock_body):
     )
     updated_config = {
         "id": "cfg1",
-        "created_at": "2024-01-01T00:00:00Z",
         "sets": [{"name": "set1", "subs": ["funny"], "usernames": ["alice"]}],
         "blocked_users": ["baduser"],
         "user_id": mock_user.id,

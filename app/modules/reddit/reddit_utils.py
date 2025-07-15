@@ -1,6 +1,5 @@
 import uuid
 import asyncpraw as praw
-from datetime import datetime, timezone
 from logging import Logger
 
 from app.common.db import DbCollection
@@ -17,7 +16,6 @@ async def create_initial_reddit_config(
     """
     default_config = {
         "id": str(uuid.uuid4()),
-        "created_at": datetime.now(timezone.utc),
         "user_id": user_id,
         "sets": [
             {

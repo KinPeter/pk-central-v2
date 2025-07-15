@@ -30,7 +30,6 @@ def mock_user():
 async def test_get_start_settings_success(mock_request, mock_user):
     data = {
         "id": "cfg1",
-        "created_at": "2024-01-01T00:00:00Z",
         "name": "MyName",
         "shortcut_icon_base_url": "http://icons/",
         "strava_redirect_uri": "http://strava/",

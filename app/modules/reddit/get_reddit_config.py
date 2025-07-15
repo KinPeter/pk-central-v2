@@ -24,7 +24,6 @@ async def get_reddit_config(request: Request, user: CurrentUser) -> RedditConfig
 
         return RedditConfig(
             id=config["id"],
-            created_at=config["created_at"],
             sets=config["sets"],
             blocked_users=config["blocked_users"],
         )

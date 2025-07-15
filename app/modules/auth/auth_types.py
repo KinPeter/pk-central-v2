@@ -1,4 +1,3 @@
-from datetime import datetime
 from pydantic import EmailStr, Field
 from app.common.responses import OkResponse
 from app.common.types import BaseEntity, PkBaseModel
@@ -8,7 +7,7 @@ class User(BaseEntity):
     email: EmailStr
     login_code_hash: str | None
     login_code_salt: str | None
-    login_code_expires: datetime | None
+    login_code_expires: str | None
     password_hash: str | None
     password_salt: str | None
 
@@ -66,7 +65,7 @@ class LoginResponse(OkResponse):
     id: str
     email: str
     token: str
-    expires_at: datetime
+    expires_at: str
 
 
 class LoginCodeResponse(OkResponse):

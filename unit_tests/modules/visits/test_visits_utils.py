@@ -1,5 +1,4 @@
 import pytest
-from datetime import datetime, timezone
 from app.modules.visits.visits_utils import to_visit
 from app.modules.visits.visits_types import Visit
 
@@ -11,7 +10,6 @@ from app.modules.visits.visits_types import Visit
         (
             {
                 "id": "v1",
-                "created_at": datetime(2025, 7, 12, tzinfo=timezone.utc),
                 "city": "Paris",
                 "country": "France",
                 "lat": 48.8566,
@@ -20,7 +18,6 @@ from app.modules.visits.visits_types import Visit
             },
             Visit(
                 id="v1",
-                created_at=datetime(2025, 7, 12, tzinfo=timezone.utc),
                 city="Paris",
                 country="France",
                 lat=48.8566,
@@ -32,7 +29,6 @@ from app.modules.visits.visits_types import Visit
         (
             {
                 "id": "v2",
-                "created_at": datetime(2025, 7, 12, tzinfo=timezone.utc),
                 "city": "London",
                 "country": "UK",
                 "lat": 51.5074,
@@ -41,7 +37,6 @@ from app.modules.visits.visits_types import Visit
             },
             Visit(
                 id="v2",
-                created_at=datetime(2025, 7, 12, tzinfo=timezone.utc),
                 city="London",
                 country="UK",
                 lat=51.5074,
@@ -53,7 +48,6 @@ from app.modules.visits.visits_types import Visit
         (
             {
                 "id": "v3",
-                "created_at": datetime(2025, 7, 12, tzinfo=timezone.utc),
                 "city": "Berlin",
                 "country": "Germany",
                 "lat": 52.52,
@@ -62,7 +56,6 @@ from app.modules.visits.visits_types import Visit
             },
             Visit(
                 id="v3",
-                created_at=datetime(2025, 7, 12, tzinfo=timezone.utc),
                 city="Berlin",
                 country="Germany",
                 lat=52.52,
@@ -76,7 +69,6 @@ def test_to_visit(item, expected):
     result = to_visit(item)
     assert isinstance(result, Visit)
     assert result.id == expected.id
-    assert result.created_at == expected.created_at
     assert result.city == expected.city
     assert result.country == expected.country
     assert result.lat == expected.lat

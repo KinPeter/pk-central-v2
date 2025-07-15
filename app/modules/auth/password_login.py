@@ -1,4 +1,6 @@
+from datetime import tzinfo
 from logging import Logger
+from annotated_types import T
 from fastapi import Request
 
 from app.common.db import DbCollection
@@ -36,7 +38,7 @@ async def password_login(body: PasswordLoginRequest, request: Request) -> LoginR
         )
 
         return LoginResponse(
-            email=email, id=user["id"], token=token, expires_at=expires_at
+            email=email, id=user["id"], token=token, expires_at=expires_at.isoformat()
         )
 
     except UnauthorizedException as e:

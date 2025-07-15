@@ -16,4 +16,5 @@ class NoteRequest(PkBaseModel):
 
 
 class Note(BaseEntity, NoteRequest):
+    created_at: str
     pass

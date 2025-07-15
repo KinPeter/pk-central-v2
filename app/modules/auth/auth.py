@@ -2,8 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Request, status
 from fastapi.params import Depends
 
-from app.common.responses import IdResponse, ListResponse, MessageResponse, ResponseDocs
-from app.common.types import PkBaseModel
+from app.common.responses import IdResponse, MessageResponse, ResponseDocs
 from app.modules.auth.token_refresh import token_refresh
 from app.modules.auth.auth_types import (
     CodeLoginRequest,

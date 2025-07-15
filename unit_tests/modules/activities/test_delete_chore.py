@@ -26,7 +26,6 @@ async def test_delete_chore_success(mock_request, mock_user):
     update_result.matched_count = 1
     updated_data = {
         "id": "cfg1",
-        "created_at": "2024-01-01T00:00:00Z",
         "walk_weekly_goal": 1000,
         "walk_monthly_goal": 4000,
         "cycling_weekly_goal": 200,

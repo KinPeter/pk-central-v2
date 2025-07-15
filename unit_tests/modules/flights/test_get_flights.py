@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock, MagicMock
 from fastapi import Request
 from app.modules.flights.get_flights import get_flights
 from app.common.responses import InternalServerErrorException, ListResponse
-from app.modules.flights.flights_types import Flight
 
 
 @pytest.fixture

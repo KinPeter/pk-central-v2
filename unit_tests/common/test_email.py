@@ -1,7 +1,7 @@
 import pytest
 import requests
 from unittest.mock import MagicMock, patch
-from app.common.email import EmailManager, EmailData, PkMailData
+from app.common.email import EmailManager, PkMailData
 from app.common.responses import InternalServerErrorException, NotImplementedException
 
 
@@ -22,6 +22,7 @@ def email_manager(env):
     with patch("app.common.email.EmailTemplates") as mock_templates:
         mock_templates.return_value.signup_notification.return_value = ("text", "html")
         mock_templates.return_value.login_code.return_value = ("text", "html")
+        mock_templates.return_value.data_backup.return_value = ("text", "html")
         yield EmailManager(env)
 
 
@@ -43,9 +44,18 @@ def test_send_login_code_calls_send_email(email_manager):
         assert email_data.to == "test@user.com"
 
 
-def test_send_data_backup_raises_not_implemented(email_manager):
-    with pytest.raises(NotImplementedException):
-        email_manager.send_data_backup("backup.zip")
+def test_send_data_backup(email_manager):
+    with patch.object(email_manager, "send_email") as mock_send_email:
+        files = [
+            MagicMock(content="file-content-1", filename="file1.json"),
+            MagicMock(content="file-content-2", filename="file2.json"),
+        ]
+        email_manager.send_data_backup(name="Peter", email="peter@pk.com", files=files)
+        mock_send_email.assert_called_once()
+        email_data = mock_send_email.call_args[0][0]
+        assert email_data.subject == "Data backup for PK-Central"
+        assert email_data.to == "peter@pk.com"
+        assert email_data.attachments == files
 
 
 def test_send_email_success(env):

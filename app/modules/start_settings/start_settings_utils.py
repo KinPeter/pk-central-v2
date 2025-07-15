@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from logging import Logger
 import uuid
 from app.common.db import DbCollection
@@ -18,7 +17,6 @@ async def create_initial_settings(
     data = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
-        "created_at": datetime.now(timezone.utc),
         "name": None,
         "shortcut_icon_base_url": None,
         "strava_redirect_uri": None,

@@ -63,7 +63,7 @@ async def create_initial_user(email: str, db: AsyncDatabase, logger: Logger) -> 
 
     user = {
         "id": str(uuid.uuid4()),
-        "created_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "email": email,
         "login_code_hash": None,
         "login_code_salt": None,

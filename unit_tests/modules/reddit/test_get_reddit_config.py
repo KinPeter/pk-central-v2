@@ -25,7 +25,6 @@ async def test_get_reddit_config_success(mock_request, mock_user):
     mock_set = {"name": "set1", "subs": ["funny"], "usernames": []}
     config_data = {
         "id": "cfg1",
-        "created_at": "2024-01-01T00:00:00Z",
         "sets": [mock_set],
         "blocked_users": ["baduser"],
         "user_id": mock_user.id,

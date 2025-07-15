@@ -13,7 +13,7 @@ from datetime import datetime, timezone
         (
             {
                 "id": "n1",
-                "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc).isoformat(),
                 "text": "Test note",
                 "links": [
                     {"name": "Google", "url": "https://google.com"},
@@ -25,7 +25,7 @@ from datetime import datetime, timezone
             },
             {
                 "id": "n1",
-                "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc).isoformat(),
                 "text": "Test note",
                 "links": [
                     Link(name="Google", url=HttpUrl("https://google.com")),
@@ -40,11 +40,11 @@ from datetime import datetime, timezone
         (
             {
                 "id": "n2",
-                "created_at": datetime(2024, 1, 2, tzinfo=timezone.utc),
+                "created_at": datetime(2024, 1, 2, tzinfo=timezone.utc).isoformat(),
             },
             {
                 "id": "n2",
-                "created_at": datetime(2024, 1, 2, tzinfo=timezone.utc),
+                "created_at": datetime(2024, 1, 2, tzinfo=timezone.utc).isoformat(),
                 "text": None,
                 "links": [],
                 "archived": False,
@@ -55,13 +55,13 @@ from datetime import datetime, timezone
         (
             {
                 "id": "n3",
-                "created_at": datetime(2024, 1, 3, tzinfo=timezone.utc),
+                "created_at": datetime(2024, 1, 3, tzinfo=timezone.utc).isoformat(),
                 "text": None,
                 "links": [],
             },
             {
                 "id": "n3",
-                "created_at": datetime(2024, 1, 3, tzinfo=timezone.utc),
+                "created_at": datetime(2024, 1, 3, tzinfo=timezone.utc).isoformat(),
                 "text": None,
                 "links": [],
                 "archived": False,

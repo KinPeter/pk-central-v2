@@ -4,7 +4,6 @@ from app.modules.flights.flights_types import Flight
 def to_flight(item: dict) -> Flight:
     return Flight(
         id=item["id"],
-        created_at=item["created_at"],
         flight_number=item["flight_number"],
         date=item["date"],
         departure_airport=item["departure_airport"],

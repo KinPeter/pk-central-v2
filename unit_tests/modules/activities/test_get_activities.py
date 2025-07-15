@@ -25,7 +25,6 @@ def mock_user():
 async def test_get_activities_success(mock_request, mock_user):
     data = {
         "id": "cfg1",
-        "created_at": "2024-01-01T00:00:00Z",
         "chores": [
             {"id": "chore1", "name": "Chore1", "km_interval": 5, "last_km": 10.34}
         ],

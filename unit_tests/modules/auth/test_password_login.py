@@ -61,7 +61,7 @@ class TestPasswordLogin:
                 assert result.email == email
                 assert result.id == user["id"]
                 assert result.token == "token"
-                assert result.expires_at == expires_at
+                assert result.expires_at == expires_at.isoformat()
 
     @pytest.mark.asyncio
     async def test_user_not_found(self, request_obj):

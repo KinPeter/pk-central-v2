@@ -40,7 +40,6 @@ async def update_start_settings(
 
         return StartSettings(
             id=updated_data["id"],
-            created_at=updated_data["created_at"],
             name=updated_data["name"],
             shortcut_icon_base_url=updated_data["shortcut_icon_base_url"],
             strava_redirect_uri=updated_data["strava_redirect_uri"],

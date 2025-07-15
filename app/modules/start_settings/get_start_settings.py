@@ -25,7 +25,6 @@ async def get_start_settings(request: Request, user: CurrentUser) -> StartSettin
 
         return StartSettings(
             id=data["id"],
-            created_at=data["created_at"],
             name=data["name"],
             shortcut_icon_base_url=data["shortcut_icon_base_url"],
             strava_redirect_uri=data["strava_redirect_uri"],

@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from logging import Logger
 import uuid
 from app.common.db import DbCollection
@@ -18,7 +17,6 @@ async def create_initial_activities_config(
     data = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
-        "created_at": datetime.now(timezone.utc),
         "chores": [],
         "walk_weekly_goal": 0,
         "walk_monthly_goal": 0,

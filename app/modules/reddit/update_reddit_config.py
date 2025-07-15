@@ -34,7 +34,6 @@ async def update_reddit_config(
 
         return RedditConfig(
             id=updated_config["id"],
-            created_at=updated_config["created_at"],
             sets=updated_config["sets"],
             blocked_users=updated_config["blocked_users"],
         )

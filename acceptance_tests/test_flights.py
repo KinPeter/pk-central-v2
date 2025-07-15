@@ -49,7 +49,6 @@ class TestCreateAndGetFlights:
         assert response.status_code == 201
         created_flight = response.json()
         assert "id" in created_flight
-        assert "createdAt" in created_flight
         for k, v in flight_data.items():
             if isinstance(v, dict):
                 for subk, subv in v.items():
@@ -98,7 +97,6 @@ class TestCreateAndGetFlights:
         assert response.status_code == 201
         created_flight2 = response.json()
         assert "id" in created_flight2
-        assert "createdAt" in created_flight2
         for k, v in flight_data2.items():
             if isinstance(v, dict):
                 for subk, subv in v.items():

@@ -4,7 +4,6 @@ from app.modules.flights.flights_utils import to_flight
 from app.modules.flights.flights_types import Flight
 
 
-from datetime import datetime
 from app.modules.flights.flights_types import (
     Airport,
     Aircraft,
@@ -24,7 +23,6 @@ class TestToFlight:
             (
                 {
                     "id": "f1",
-                    "created_at": datetime(2024, 1, 1, 12, 0, 0),
                     "flight_number": "LH123",
                     "date": "2024-01-01",
                     "departure_airport": Airport(
@@ -61,7 +59,6 @@ class TestToFlight:
                 },
                 Flight(
                     id="f1",
-                    created_at=datetime(2024, 1, 1, 12, 0, 0),
                     flight_number="LH123",
                     date="2024-01-01",
                     departure_airport=Airport(
@@ -101,7 +98,6 @@ class TestToFlight:
             (
                 {
                     "id": "f2",
-                    "created_at": datetime(2024, 2, 2, 15, 0, 0),
                     "flight_number": "BA456",
                     "date": "2024-02-02",
                     "departure_airport": Airport(
@@ -132,7 +128,6 @@ class TestToFlight:
                 },
                 Flight(
                     id="f2",
-                    created_at=datetime(2024, 2, 2, 15, 0, 0),
                     flight_number="BA456",
                     date="2024-02-02",
                     departure_airport=Airport(
@@ -174,7 +169,6 @@ class TestToFlight:
         result = to_flight(item)
         assert isinstance(result, Flight)
         assert result.id == expected.id
-        assert result.created_at == expected.created_at
         assert result.flight_number == expected.flight_number
         assert result.date == expected.date
         assert result.departure_airport == expected.departure_airport

@@ -53,7 +53,7 @@ async def post_create_note(
         user=user,
         collection_name=DbCollection.NOTES,
         entity_name="Note",
-    ).create(body, mapper_fn=to_note)
+    ).create(body, mapper_fn=to_note, create_timestamp=True)
 
 
 @router.put(

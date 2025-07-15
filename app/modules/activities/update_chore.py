@@ -35,7 +35,6 @@ async def update_chore(
 
         return ActivitiesConfig(
             id=data["id"],
-            created_at=data["created_at"],
             walk_weekly_goal=data["walk_weekly_goal"],
             walk_monthly_goal=data["walk_monthly_goal"],
             cycling_weekly_goal=data["cycling_weekly_goal"],

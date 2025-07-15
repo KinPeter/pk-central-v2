@@ -24,7 +24,7 @@ async def token_refresh(request: Request, user: CurrentUser) -> LoginResponse:
             email=user.email,
             id=user.id,
             token=token,
-            expires_at=expires_at,
+            expires_at=expires_at.isoformat(),
         )
 
     except Exception as e:
