@@ -27,7 +27,7 @@ def seed():
             failure += 1
             print(f"Failed to seed item {item['name']}: {response.text}")
 
-        sleep(1)  # To avoid hitting the API too fast
+        sleep(seeder.sleep_time)  # To avoid hitting the API too fast
 
     print(f"Seeding completed: {success} items successful, {failure} items failed.")
 

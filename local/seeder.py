@@ -7,6 +7,7 @@ from pymongo.server_api import ServerApi
 class Seeder:
     def __init__(self):
         dotenv.load_dotenv()
+        self.sleep_time = 1
 
     def get_api_credentials(self):
         seed_token = os.getenv("SEED_TOKEN")

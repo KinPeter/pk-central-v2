@@ -49,7 +49,7 @@ def seed():
                 f"Failed to seed item {item['flightNumber']}/{item['date']}: {response.text}"
             )
 
-        sleep(0.2)  # To avoid hitting the API too fast
+        sleep(seeder.sleep_time)  # To avoid hitting the API too fast
 
     print(f"Seeding completed: {success} items successful, {failure} items failed.")
 
