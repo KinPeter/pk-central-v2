@@ -6203,5 +6203,20 @@
     "icao": "TZP",
     "iata": "ZG",
     "name": "Zipair Tokyo"
+  },
+  {
+    "icao": "MAH",
+    "iata": "MA",
+    "name": "Malev Hungarian Airlines"
+  },
+  {
+    "icao": "HSK",
+    "iata": "5P",
+    "name": "SkyEurope Airlines"
+  },
+  {
+    "icao": "SNB",
+    "iata": "NB",
+    "name": "Sterling"
   }
 ]
