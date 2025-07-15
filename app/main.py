@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.common.config import get_allowed_origins
+from app.common.config import allow_origins
 from app.common.db import MongoDbManager
 from app.common.environment import load_environment
 from app.common.logger import LoggingMiddleware, get_logger
@@ -22,8 +22,6 @@ from app.modules.start_settings import start_settings
 from app.modules.visits import visits
 
 load_dotenv()
-
-allow_origins = get_allowed_origins()
 
 
 @asynccontextmanager
