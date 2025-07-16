@@ -1,5 +1,7 @@
+import re
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
 from pydantic import Field
 from app.common.crud_handler import CrudHandler
 from app.common.responses import (
@@ -151,6 +153,45 @@ class TestCreate:
         with pytest.raises(InternalServerErrorException):
             await handler.create(body, mapper_fn)
         handler.logger.error.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_create_timestamp_true(self, handler, mapper_fn):
+        collection = handler.collection
+        body = DummyModel(a=7, b="baz")
+        collection.insert_one = AsyncMock(
+            return_value=MagicMock(acknowledged=True, inserted_id="mongoid")
+        )
+        collection.find_one = AsyncMock(return_value={"a": 7, "b": "baz"})
+        # Patch datetime to a fixed value for testability
+        with patch("app.common.crud_handler.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime(
+                2025, 7, 16, 12, 0, 0, tzinfo=timezone.utc
+            )
+            mock_datetime.timezone = timezone
+            result = await handler.create(body, mapper_fn, create_timestamp=True)
+            # Check that 'created_at' was set in the inserted document
+            args, kwargs = collection.insert_one.call_args
+            inserted = args[0]
+            assert "created_at" in inserted
+            # Should be ISO format with 'Z' or '+00:00'
+            assert re.match(
+                r"^2025-07-16T12:00:00(\+00:00|Z)$", inserted["created_at"]
+            ) or inserted["created_at"].endswith("Z")
+            assert result == {"mapped": {"a": 7, "b": "baz"}}
+
+    @pytest.mark.asyncio
+    async def test_create_timestamp_false(self, handler, mapper_fn):
+        collection = handler.collection
+        body = DummyModel(a=8, b="qux")
+        collection.insert_one = AsyncMock(
+            return_value=MagicMock(acknowledged=True, inserted_id="mongoid")
+        )
+        collection.find_one = AsyncMock(return_value={"a": 8, "b": "qux"})
+        result = await handler.create(body, mapper_fn, create_timestamp=False)
+        args, kwargs = collection.insert_one.call_args
+        inserted = args[0]
+        assert "created_at" not in inserted
+        assert result == {"mapped": {"a": 8, "b": "qux"}}
 
 
 class TestUpdate:

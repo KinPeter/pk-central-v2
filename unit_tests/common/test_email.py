@@ -53,7 +53,7 @@ def test_send_data_backup(email_manager):
         email_manager.send_data_backup(name="Peter", email="peter@pk.com", files=files)
         mock_send_email.assert_called_once()
         email_data = mock_send_email.call_args[0][0]
-        assert email_data.subject == "Data backup for PK-Central"
+        assert "Data backup for PK-Central" in email_data.subject
         assert email_data.to == "peter@pk.com"
         assert email_data.attachments == files
 

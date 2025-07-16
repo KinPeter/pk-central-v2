@@ -1,3 +1,4 @@
+from datetime import date
 import smtplib
 import requests
 
@@ -52,7 +53,8 @@ class EmailManager:
         email: str,
         files: list[EmailAttachment],
     ):
-        subject = "Data backup for PK-Central"
+        today_str = date.today().strftime("%Y-%m-%d")
+        subject = f"Data backup for PK-Central {today_str}"
         text, html = self.templates.data_backup(name)
         email_data = PkMailData(
             subject=subject,

@@ -1,4 +1,5 @@
 import pytest
+import re
 
 
 class TestCreateAndGetNotes:
@@ -27,6 +28,12 @@ class TestCreateAndGetNotes:
         assert len(created_note["links"]) == len(note_data["links"])
         assert created_note["archived"] is True
         assert created_note["pinned"] is True
+        assert "createdAt" in created_note
+        # Should be ISO format with 'Z' or '+00:00'
+        assert re.match(
+            r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+(\+00:00|Z)$",
+            created_note["createdAt"],
+        ) or created_note["createdAt"].endswith("Z")
 
         # Create another note
         note_data_minimal = {
@@ -46,6 +53,12 @@ class TestCreateAndGetNotes:
         assert len(created_note_minimal["links"]) == 1
         assert created_note_minimal["archived"] is False
         assert created_note_minimal["pinned"] is False
+        assert "createdAt" in created_note_minimal
+        # Should be ISO format with 'Z' or '+00:00'
+        assert re.match(
+            r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+(\+00:00|Z)$",
+            created_note_minimal["createdAt"],
+        ) or created_note_minimal["createdAt"].endswith("Z")
 
         # Get all notes
         response = client.get(

@@ -1,5 +1,4 @@
 import json
-from datetime import date
 from logging import Logger
 from fastapi import Request
 
@@ -24,7 +23,6 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
     logger: Logger = request.app.state.logger
 
     email_manager = EmailManager(env)
-    today_str = date.today().strftime("%Y-%m-%d")
 
     try:
         user_data = await db.get_collection(DbCollection.USERS).find_one(
@@ -103,55 +101,55 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
         files = [
             EmailAttachment(
                 content=json.dumps(user_data, default=str, ensure_ascii=False),
-                filename=f"user_data_{today_str}.json",
+                filename=f"user_data.json",
             ),
             EmailAttachment(
                 content=json.dumps(start_settings, default=str, ensure_ascii=False),
-                filename=f"start_settings_{today_str}.json",
+                filename=f"start_settings.json",
             ),
             EmailAttachment(
                 content=json.dumps(activities, default=str, ensure_ascii=False),
-                filename=f"activities_{today_str}.json",
+                filename=f"activities.json",
             ),
             EmailAttachment(
                 content=json.dumps(flights, default=str, ensure_ascii=False),
-                filename=f"flights_{today_str}.json",
+                filename=f"flights.json",
             ),
             EmailAttachment(
                 content=json.dumps(visits, default=str, ensure_ascii=False),
-                filename=f"visits_{today_str}.json",
+                filename=f"visits.json",
             ),
             EmailAttachment(
                 content=json.dumps(notes, default=str, ensure_ascii=False),
-                filename=f"notes_{today_str}.json",
+                filename=f"notes.json",
             ),
             EmailAttachment(
                 content=json.dumps(personal_data, default=str, ensure_ascii=False),
-                filename=f"personal_data_{today_str}.json",
+                filename=f"personal_data.json",
             ),
             EmailAttachment(
                 content=json.dumps(reddit, default=str, ensure_ascii=False),
-                filename=f"reddit_{today_str}.json",
+                filename=f"reddit.json",
             ),
             EmailAttachment(
                 content=json.dumps(shortcuts, default=str, ensure_ascii=False),
-                filename=f"shortcuts_{today_str}.json",
+                filename=f"shortcuts.json",
             ),
             EmailAttachment(
                 content=json.dumps(birthdays, default=str, ensure_ascii=False),
-                filename=f"birthdays_{today_str}.json",
+                filename=f"birthdays.json",
             ),
             EmailAttachment(
                 content=json.dumps(aircrafts, default=str, ensure_ascii=False),
-                filename=f"aircrafts_{today_str}.json",
+                filename=f"aircrafts.json",
             ),
             EmailAttachment(
                 content=json.dumps(airlines, default=str, ensure_ascii=False),
-                filename=f"airlines_{today_str}.json",
+                filename=f"airlines.json",
             ),
             EmailAttachment(
                 content=json.dumps(airports, default=str, ensure_ascii=False),
-                filename=f"airports_{today_str}.json",
+                filename=f"airports.json",
             ),
         ]
 
