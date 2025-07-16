@@ -1,3 +1,4 @@
+from urllib import response
 import uuid
 from datetime import datetime, timezone
 from logging import Logger
@@ -63,7 +64,11 @@ class CrudHandler[T]:
             if not data:
                 raise NotFoundException(resource=self.entity_name)
 
-            return mapper_fn(data)
+            response = mapper_fn(data)
+            self.logger.info(
+                f"OK response: Retrieved {self.entity_name} {id} for user {self.user.id}"
+            )
+            return response
 
         except NotFoundException as e:
             raise e
@@ -105,7 +110,11 @@ class CrudHandler[T]:
                     f"Failed to retrieve created {self.entity_name} for user {self.user.id}"
                 )
 
-            return mapper_fn(data)
+            response = mapper_fn(data)
+            self.logger.info(
+                f"OK response: Created {self.entity_name} for user {self.user.id}"
+            )
+            return response
 
         except Exception as e:
             self.logger.error(
@@ -134,7 +143,11 @@ class CrudHandler[T]:
             if not result:
                 raise NotFoundException(resource=self.entity_name)
 
-            return mapper_fn(result)
+            response = mapper_fn(result)
+            self.logger.info(
+                f"OK response: Updated {self.entity_name} {id} for user {self.user.id}"
+            )
+            return response
 
         except NotFoundException as e:
             raise e

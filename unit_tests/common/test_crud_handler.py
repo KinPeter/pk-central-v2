@@ -91,6 +91,7 @@ class TestGetSingle:
             {"user_id": handler.user.id, "id": "id1"}
         )
         mapper_fn.assert_called_once_with({"a": 1, "b": "foo"})
+        handler.logger.info.assert_called_once()
         assert result == {"mapped": {"a": 1, "b": "foo"}}
 
     @pytest.mark.asyncio
@@ -122,6 +123,7 @@ class TestCreate:
         collection.insert_one.assert_called()
         collection.find_one.assert_called_with({"_id": "mongoid"})
         mapper_fn.assert_called_once_with({"a": 5, "b": "bar"})
+        handler.logger.info.assert_called_once()
         assert result == {"mapped": {"a": 5, "b": "bar"}}
 
     @pytest.mark.asyncio
@@ -202,6 +204,7 @@ class TestUpdate:
         result = await handler.update("id1", DummyModel(a=1, b="bar"), mapper_fn)
         collection.find_one_and_update.assert_called()
         mapper_fn.assert_called_once_with({"a": 1, "b": "bar"})
+        handler.logger.info.assert_called_once()
         assert result == {"mapped": {"a": 1, "b": "bar"}}
 
     @pytest.mark.asyncio
