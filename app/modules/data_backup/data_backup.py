@@ -6,7 +6,7 @@ from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user
 from app.modules.data_backup.email_backup import email_backup
 
-router = APIRouter(prefix="/data_backup", tags=["Data Backup"])
+router = APIRouter(prefix="/data-backup", tags=["Data Backup"])
 
 
 @router.get(
