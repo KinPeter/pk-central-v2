@@ -3,7 +3,7 @@
 
 services:
   api:
-    image: kinp/pk-central-v2:2.0.2
+    image: kinp/pk-central-v2:2.0.3
     ports:
       - "5500:5500"
     env_file:
