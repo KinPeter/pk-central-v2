@@ -27,7 +27,7 @@ async def update_start_settings(
             {"user_id": user.id},
             {
                 "$set": body.model_dump(
-                    exclude_none=True, exclude_unset=True, mode="json"
+                    exclude_none=False, exclude_unset=True, mode="json"
                 )
             },
         )
