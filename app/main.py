@@ -20,6 +20,7 @@ from app.modules.proxy import proxy
 from app.modules.reddit import reddit
 from app.modules.shortcuts import shortcuts
 from app.modules.start_settings import start_settings
+from app.modules.trips import trips
 from app.modules.visits import visits
 
 load_dotenv()
@@ -69,6 +70,7 @@ app.include_router(activities.router)
 app.include_router(birthdays.router)
 app.include_router(flights.router)
 app.include_router(visits.router)
+app.include_router(trips.router)
 app.include_router(proxy.router)
 app.include_router(reddit.router)
 app.include_router(data_backup.router)

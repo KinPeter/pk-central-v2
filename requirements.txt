@@ -18,7 +18,7 @@ fastapi==0.115.12
 fastapi-cli==0.0.7
 frozenlist==1.7.0
 google-auth==2.40.3
-google-genai==1.20.0
+google-genai==1.26.0
 h11==0.16.0
 httpcore==1.0.9
 httptools==0.6.4
@@ -53,6 +53,7 @@ rsa==4.9.1
 shellingham==1.5.4
 sniffio==1.3.1
 starlette==0.46.2
+tenacity==8.5.0
 typer==0.16.0
 typing-inspection==0.4.1
 typing_extensions==4.14.0

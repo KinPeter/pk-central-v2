@@ -58,6 +58,42 @@ def login_user(client, user_email):
     return data["token"], data["id"], data["email"]
 
 
+def pytest_sessionstart(session):
+    """Initialize the test environment before any tests run."""
+    print("\nSetting up test environment...")
+    try:
+        client = MongoClient(mongodb_test_uri)
+        db = client.get_database(mongodb_test_db)
+        db.get_collection("airports").insert_one(
+            {
+                "iata": "BUD",
+                "icao": "LHBP",
+                "name": "Db Test Liszt Ferenc International Airport",
+                "city": "Budapest",
+                "country": "Hungary",
+                "lat": 47.4369,
+                "lng": 19.2556,
+            }
+        )
+        db.get_collection("aircrafts").insert_one(
+            {
+                "icao": "A320",
+                "name": "Db Test Airbus A320",
+            }
+        )
+        db.get_collection("airlines").insert_one(
+            {
+                "icao": "HSK",
+                "iata": "5P",
+                "name": "Db Test SkyEurope Airlines",
+            }
+        )
+        client.close()
+        print(f"Prepared test database: {mongodb_test_db}")
+    except Exception as e:
+        print(f"Error preparing test database: {e}")
+
+
 def pytest_sessionfinish(session, exitstatus):
     print("\nCleaning up test environment...")
     try:
