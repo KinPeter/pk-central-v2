@@ -5,10 +5,11 @@ from app.common.responses import ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user
 from app.modules.flights.flights_types import Aircraft, Airline
+from app.modules.trips.get_trips import get_trips
 from app.modules.trips.aircrafts import search_aircrafts
 from app.modules.trips.airlines import search_airlines
 from app.modules.trips.airports import get_airport_data
-from app.modules.trips.trips_types import AirportResponse
+from app.modules.trips.trips_types import AirportResponse, Trips
 
 
 router = APIRouter(prefix="/trips", tags=["Trips"])
@@ -86,3 +87,18 @@ async def get_search_airlines(
     If both `iata` and `name` are set, IATA code will be prioritized.
     """
     return await search_airlines(request, iata=iata, name=name)
+
+
+@router.get(
+    path="/{user_id}",
+    summary="Get trips data for a user",
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_trips(
+    request: Request,
+    user_id: str,
+) -> Trips:
+    """
+    Get trips data for a specific user.
+    """
+    return await get_trips(request, user_id=user_id)
