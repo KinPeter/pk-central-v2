@@ -143,3 +143,8 @@ To restore data to a MongoDB database, use the `mongorestore` command. For examp
 ```bash
 mongorestore --uri "mongodb+srv://<username>:<password>@<cluster-url>/" --db <dbname> --drop ./dump/<dbname>
 ```
+
+### Cron job for database backup
+
+To automate the database backup process, you can create a cron job that runs a script to dump the database regularly.
+The script for this is located in the `backup/` folder.
