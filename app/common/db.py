@@ -17,8 +17,6 @@ class DbCollection(str, Enum):
     BIRTHDAYS = "birthdays"
     FLIGHTS = "flights"
     VISITS = "visits"
-    STRAVA_ACTIVITIES = "strava_activities"
-    STRAVA_SYNC_META = "strava_sync_metadata"
     REDDIT = "reddit"
     # Static data collections
     AIRLINES = "airlines"
