@@ -28,6 +28,7 @@ class PkCentralEnv:
         deepl_api_key: str,
         strava_client_id: str,
         strava_client_secret: str,
+        strava_db_uri: str,
         gemini_api_key: str,
         reddit_client_id: str,
         reddit_client_secret: str,
@@ -60,6 +61,7 @@ class PkCentralEnv:
         self.DEEPL_API_KEY = deepl_api_key
         self.STRAVA_CLIENT_ID = strava_client_id
         self.STRAVA_CLIENT_SECRET = strava_client_secret
+        self.STRAVA_DB_URI = strava_db_uri
         self.GEMINI_API_KEY = gemini_api_key
         self.REDDIT_CLIENT_ID = reddit_client_id
         self.REDDIT_CLIENT_SECRET = reddit_client_secret
@@ -176,6 +178,10 @@ def load_environment() -> PkCentralEnv:
     if not strava_client_secret:
         raise ValueError("Missing required environment variable: STRAVA_CLIENT_SECRET")
 
+    strava_db_uri = os.getenv("STRAVA_DB_URI")
+    if not strava_db_uri:
+        raise ValueError("Missing required environment variable: STRAVA_DB_URI")
+
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if not gemini_api_key:
         raise ValueError("Missing required environment variable: GEMINI_API_KEY")
@@ -229,6 +235,7 @@ def load_environment() -> PkCentralEnv:
         deepl_api_key=deepl_api_key,
         strava_client_id=strava_client_id,
         strava_client_secret=strava_client_secret,
+        strava_db_uri=strava_db_uri,
         gemini_api_key=gemini_api_key,
         reddit_client_id=reddit_client_id,
         reddit_client_secret=reddit_client_secret,
