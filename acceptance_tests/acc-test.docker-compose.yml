@@ -49,6 +49,7 @@ services:
       GEMINI_API_KEY: geminiApiKey
       STRAVA_CLIENT_ID: stravaClientId
       STRAVA_CLIENT_SECRET: stravaClientSecret
+      STRAVA_DB_URI: mongodb://admin:admin@central_v2_mongodb_server:27017/
       REDDIT_CLIENT_ID: redditClientId
       REDDIT_CLIENT_SECRET: redditClientSecret
       REDDIT_USER: Reddit-User3234
