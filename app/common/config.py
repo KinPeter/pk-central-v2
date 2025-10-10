@@ -6,8 +6,12 @@ allow_origins = [
     "https://stuff.p-kin.com",
     "https://strava.p-kin.com",
     "https://rddit.p-kin.com",
+    "https://sso.p-kin.com",
+    "https://apps-central.p-kin.com",
     "http://localhost:5100",  # tripz
     "http://localhost:4444",  # startv4
     "http://localhost:5499",  # pkrddit
     "http://localhost:5498",  # stravarts
+    "http://localhost:5656",  # sso
+    "http://localhost:5757",  # apps-central
 ]

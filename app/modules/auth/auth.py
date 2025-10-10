@@ -11,6 +11,7 @@ from app.modules.auth.auth_types import (
     LoginCodeResponse,
     LoginResponse,
     PasswordLoginRequest,
+    SsoLoginRequest,
 )
 from app.modules.auth.auth_utils import auth_user
 from app.modules.auth.instant_login_code import instant_login_code
@@ -19,6 +20,7 @@ from app.modules.auth.password_signup import password_signup
 from app.modules.auth.request_login_code import request_login_code
 from app.modules.auth.set_password import set_password
 from app.modules.auth.verify_login_code import login_code_verify
+from app.modules.auth.verify_sso import sso_verify
 
 
 router = APIRouter(tags=["Auth"], prefix="/auth")
@@ -71,6 +73,20 @@ async def post_verify_login_code(
     If the user does not exist or the password is incorrect, it will return an error.
     """
     return await login_code_verify(body, request)
+
+
+@router.post(
+    path="/verify-sso",
+    summary="Log in with a social signin / SSO id token",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response, **ResponseDocs.forbidden_response},
+)
+async def post_verify_sso(body: SsoLoginRequest, request: Request) -> LoginResponse:
+    """
+    Log in a user with a social signin / SSO id token.
+    If the user does not exist or the id token is invalid, it will return an error.
+    """
+    return await sso_verify(body, request)
 
 
 @router.post(

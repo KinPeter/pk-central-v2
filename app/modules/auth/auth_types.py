@@ -61,6 +61,21 @@ class CodeLoginRequest(EmailLoginRequest):
     }
 
 
+class SsoLoginRequest(EmailLoginRequest):
+    id_token: str
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "myname@gmail.com",
+                    "id_token": "ssoIdTokenIssuedByAWSCognito",
+                }
+            ]
+        }
+    }
+
+
 class LoginResponse(OkResponse):
     id: str
     email: str

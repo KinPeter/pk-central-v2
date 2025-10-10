@@ -35,6 +35,11 @@ class PkCentralEnv:
         reddit_user: str,
         reddit_password: str,
         reddit_user_agent: str,
+        aws_region: str,
+        aws_access_key: str,
+        aws_secret_access_key: str,
+        aws_cognito_user_pool_id: str,
+        aws_cognito_app_client_id: str,
         pk_env: str,
     ):
         self.ROOT_PATH = root_path
@@ -68,6 +73,11 @@ class PkCentralEnv:
         self.REDDIT_USER = reddit_user
         self.REDDIT_PASSWORD = reddit_password
         self.REDDIT_USER_AGENT = reddit_user_agent
+        self.AWS_REGION = aws_region
+        self.AWS_ACCESS_KEY = aws_access_key
+        self.AWS_SECRET_ACCESS_KEY = aws_secret_access_key
+        self.AWS_COGNITO_USER_POOL_ID = aws_cognito_user_pool_id
+        self.AWS_COGNITO_APP_CLIENT_ID = aws_cognito_app_client_id
         self.PK_ENV = pk_env
 
 
@@ -206,6 +216,30 @@ def load_environment() -> PkCentralEnv:
     if not reddit_user_agent:
         raise ValueError("Missing required environment variable: REDDIT_USER_AGENT")
 
+    aws_region = os.getenv("AWS_REGION")
+    if not aws_region:
+        raise ValueError("Missing required environment variable: AWS_REGION")
+
+    aws_access_key = os.getenv("AWS_ACCESS_KEY")
+    if not aws_access_key:
+        raise ValueError("Missing required environment variable: AWS_ACCESS_KEY")
+
+    aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    if not aws_secret_access_key:
+        raise ValueError("Missing required environment variable: AWS_SECRET_ACCESS_KEY")
+
+    aws_cognito_user_pool_id = os.getenv("AWS_COGNITO_USER_POOL_ID")
+    if not aws_cognito_user_pool_id:
+        raise ValueError(
+            "Missing required environment variable: AWS_COGNITO_USER_POOL_ID"
+        )
+
+    aws_cognito_app_client_id = os.getenv("AWS_COGNITO_APP_CLIENT_ID")
+    if not aws_cognito_app_client_id:
+        raise ValueError(
+            "Missing required environment variable: AWS_COGNITO_APP_CLIENT_ID"
+        )
+
     pk_env = os.getenv("PK_ENV")
     if not pk_env:
         raise ValueError("Missing required environment variable: PK_ENV")
@@ -242,5 +276,10 @@ def load_environment() -> PkCentralEnv:
         reddit_user=reddit_user,
         reddit_password=reddit_password,
         reddit_user_agent=reddit_user_agent,
+        aws_region=aws_region,
+        aws_access_key=aws_access_key,
+        aws_secret_access_key=aws_secret_access_key,
+        aws_cognito_user_pool_id=aws_cognito_user_pool_id,
+        aws_cognito_app_client_id=aws_cognito_app_client_id,
         pk_env=pk_env,
     )
