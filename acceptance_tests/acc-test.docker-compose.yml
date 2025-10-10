@@ -55,6 +55,11 @@ services:
       REDDIT_USER: Reddit-User3234
       REDDIT_PASSWORD: redditPassword1234
       REDDIT_USER_AGENT: python:com.example.testing:v1.0 (by /u/Reddit-User3234)
+      AWS_REGION: eu-central-1
+      AWS_ACCESS_KEY: awsAccessKeyId
+      AWS_SECRET_ACCESS_KEY: awsSecretAccessKey
+      AWS_COGNITO_USER_POOL_ID: eu-central-1_userpoolid
+      AWS_COGNITO_APP_CLIENT_ID: awsCognitoAppClientId
     ports:
       - "5500:5500"
     volumes:
