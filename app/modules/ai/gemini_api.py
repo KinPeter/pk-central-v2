@@ -19,9 +19,7 @@ class GeminiApi:
         self.client: Client = genai.Client(api_key=api_key)
         self.logger: Logger = logger
 
-    async def generate_json(
-        self, prompt: str, model: str = "gemini-2.0-flash-001"
-    ) -> dict:
+    async def generate_json(self, prompt: str, model: str = "gemini-2.5-flash") -> dict:
         """
         Generate text in JSON format using the Gemini API.
         """
