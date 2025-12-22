@@ -1,4 +1,3 @@
-from urllib import response
 import uuid
 from datetime import datetime, timezone
 from logging import Logger
@@ -32,14 +31,16 @@ class CrudHandler[T]:
         self.collection = self.db.get_collection(collection_name)
         self.entity_name = entity_name
 
-    async def get_listed(self, mapper_fn: Callable[[dict], T]) -> ListResponse[T]:
+    async def get_listed(
+        self, mapper_fn: Callable[[dict], T], projection: dict | None = None
+    ) -> ListResponse[T]:
         """
         Retrieve a list of entities for the current user.
         """
         try:
-            data = await self.collection.find({"user_id": self.user.id}).to_list(
-                length=None
-            )
+            data = await self.collection.find(
+                {"user_id": self.user.id}, projection=projection
+            ).to_list(length=None)
             if not data:
                 return ListResponse(entities=[])
 
@@ -55,12 +56,16 @@ class CrudHandler[T]:
                 + str(e)
             )
 
-    async def get_single(self, id: str, mapper_fn: Callable[[dict], T]) -> T:
+    async def get_single(
+        self, id: str, mapper_fn: Callable[[dict], T], projection: dict | None = None
+    ) -> T:
         """
         Retrieve a single entity by ID for the current user.
         """
         try:
-            data = await self.collection.find_one({"user_id": self.user.id, "id": id})
+            data = await self.collection.find_one(
+                {"user_id": self.user.id, "id": id}, projection=projection
+            )
             if not data:
                 raise NotFoundException(resource=self.entity_name)
 

@@ -18,6 +18,7 @@ class DbCollection(str, Enum):
     FLIGHTS = "flights"
     VISITS = "visits"
     REDDIT = "reddit"
+    DOCUMENTS = "documents"
     # Static data collections
     AIRLINES = "airlines"
     AIRPORTS = "airports"

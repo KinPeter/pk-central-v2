@@ -56,10 +56,29 @@ class TestGetListed:
             return_value=[{"a": 1}, {"a": 2}]
         )
         result = await handler.get_listed(mapper_fn)
-        collection.find.assert_called_once_with({"user_id": handler.user.id})
+        collection.find.assert_called_once_with(
+            {"user_id": handler.user.id}, projection=None
+        )
         assert isinstance(result, ListResponse)
         assert mapper_fn.call_count == 2
         assert result.entities == [{"mapped": {"a": 1}}, {"mapped": {"a": 2}}]
+
+    @pytest.mark.asyncio
+    async def test_success_with_projection(self, handler, mapper_fn):
+        collection = handler.collection
+        projection = {"name": 1, "email": 1}
+        collection.find.return_value.to_list = AsyncMock(
+            return_value=[{"name": "John", "email": "john@example.com"}]
+        )
+        result = await handler.get_listed(mapper_fn, projection=projection)
+        collection.find.assert_called_once_with(
+            {"user_id": handler.user.id}, projection=projection
+        )
+        assert isinstance(result, ListResponse)
+        assert mapper_fn.call_count == 1
+        assert result.entities == [
+            {"mapped": {"name": "John", "email": "john@example.com"}}
+        ]
 
     @pytest.mark.asyncio
     async def test_empty(self, handler, mapper_fn):
@@ -88,11 +107,26 @@ class TestGetSingle:
         collection.find_one = AsyncMock(return_value={"a": 1, "b": "foo"})
         result = await handler.get_single("id1", mapper_fn)
         collection.find_one.assert_called_once_with(
-            {"user_id": handler.user.id, "id": "id1"}
+            {"user_id": handler.user.id, "id": "id1"}, projection=None
         )
         mapper_fn.assert_called_once_with({"a": 1, "b": "foo"})
         handler.logger.info.assert_called_once()
         assert result == {"mapped": {"a": 1, "b": "foo"}}
+
+    @pytest.mark.asyncio
+    async def test_success_with_projection(self, handler, mapper_fn):
+        collection = handler.collection
+        projection = {"name": 1, "email": 1}
+        collection.find_one = AsyncMock(
+            return_value={"name": "John", "email": "john@example.com"}
+        )
+        result = await handler.get_single("id1", mapper_fn, projection=projection)
+        collection.find_one.assert_called_once_with(
+            {"user_id": handler.user.id, "id": "id1"}, projection=projection
+        )
+        mapper_fn.assert_called_once_with({"name": "John", "email": "john@example.com"})
+        handler.logger.info.assert_called_once()
+        assert result == {"mapped": {"name": "John", "email": "john@example.com"}}
 
     @pytest.mark.asyncio
     async def test_not_found(self, handler, mapper_fn):

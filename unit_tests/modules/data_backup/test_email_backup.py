@@ -45,9 +45,9 @@ async def test_email_backup_success(mock_request, mock_user):
         mock_email_manager.send_data_backup.assert_called_once()
         # Check DB call counts
         # There are 4 find_one calls (users, start_settings, activities, reddit)
-        # and 9 find calls (flights, visits, notes, personal_data, shortcuts, birthdays, aircrafts, airlines, airports)
+        # and 10 find calls (flights, visits, notes, personal_data, shortcuts, birthdays, documents, aircrafts, airlines, airports)
         assert db.get_collection.return_value.find_one.call_count == 4
-        assert db.get_collection.return_value.find.call_count == 9
+        assert db.get_collection.return_value.find.call_count == 10
 
 
 @pytest.mark.asyncio

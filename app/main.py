@@ -13,6 +13,7 @@ from app.modules.activities import activities
 from app.modules.auth import auth
 from app.modules.birthdays import birthdays
 from app.modules.data_backup import data_backup
+from app.modules.docs import docs
 from app.modules.flights import flights
 from app.modules.notes import notes
 from app.modules.personal_data import personal_data
@@ -72,6 +73,7 @@ app.include_router(birthdays.router)
 app.include_router(flights.router)
 app.include_router(visits.router)
 app.include_router(trips.router)
+app.include_router(docs.router)
 app.include_router(proxy.router)
 app.include_router(reddit.router)
 app.include_router(strava.router)

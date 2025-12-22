@@ -23,6 +23,7 @@ db.createCollection("visits");
 db.createCollection("strava_activities");
 db.createCollection("strava_sync_metadata");
 db.createCollection("reddit");
+db.createCollection("documents");
 db.createCollection("airlines");
 db.createCollection("aircrafts");
 db.createCollection("airports");
