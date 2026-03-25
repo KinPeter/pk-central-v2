@@ -299,6 +299,7 @@ class TestGenerateApiKey:
         response = client.post(
             "/auth/api-key",
             headers={"Authorization": f"Bearer {token}"},
+            json={"name": "Home server"},
         )
         assert response.status_code == 201
         data = response.json()
@@ -311,6 +312,7 @@ class TestGenerateApiKey:
         response = client.post(
             "/auth/api-key",
             headers={"Authorization": f"Bearer {token}"},
+            json={"name": "Home server"},
         )
         assert response.status_code == 201
         assert response.json()["apiKey"].startswith("pk_")
@@ -321,20 +323,43 @@ class TestGenerateApiKey:
         response1 = client.post(
             "/auth/api-key",
             headers={"Authorization": f"Bearer {token}"},
+            json={"name": "Client A"},
         )
         response2 = client.post(
             "/auth/api-key",
             headers={"Authorization": f"Bearer {token}"},
+            json={"name": "Client B"},
         )
         assert response1.status_code == 201
         assert response2.status_code == 201
         assert response1.json()["apiKey"] != response2.json()["apiKey"]
         assert response1.json()["id"] != response2.json()["id"]
 
+    def test_name_too_short(self, client, login_user):
+        token, _, _ = login_user
+
+        response = client.post(
+            "/auth/api-key",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"name": "x"},
+        )
+        assert response.status_code == 422
+
+    def test_name_missing(self, client, login_user):
+        token, _, _ = login_user
+
+        response = client.post(
+            "/auth/api-key",
+            headers={"Authorization": f"Bearer {token}"},
+            json={},
+        )
+        assert response.status_code == 422
+
     def test_invalid_token(self, client):
         response = client.post(
             "/auth/api-key",
             headers={"Authorization": "Bearer invalid_token"},
+            json={"name": "Home server"},
         )
         assert response.status_code == 401
         data = response.json()
@@ -342,7 +367,7 @@ class TestGenerateApiKey:
         assert "Invalid token" in data["detail"]
 
     def test_no_token(self, client):
-        response = client.post("/auth/api-key")
+        response = client.post("/auth/api-key", json={"name": "Home server"})
         assert response.status_code == 403
 
 

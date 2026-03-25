@@ -87,8 +87,23 @@ class LoginCodeResponse(OkResponse):
     login_code: str
 
 
+class GenerateApiKeyRequest(PkBaseModel):
+    name: str = Field(..., min_length=2, max_length=256)
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "name": "Home server",
+                }
+            ]
+        }
+    }
+
+
 class ApiKey(BaseEntity):
     user_id: str
+    name: str
     hashed_key: str
     created_at: str
     last_used_at: str | None

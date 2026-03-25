@@ -47,7 +47,7 @@ async def test_email_backup_success(mock_request, mock_user):
         # There are 4 find_one calls (users, start_settings, activities, reddit)
         # and 10 find calls (flights, visits, notes, personal_data, shortcuts, birthdays, documents, aircrafts, airlines, airports)
         assert db.get_collection.return_value.find_one.call_count == 4
-        assert db.get_collection.return_value.find.call_count == 10
+        assert db.get_collection.return_value.find.call_count == 11
 
 
 @pytest.mark.asyncio

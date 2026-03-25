@@ -8,6 +8,7 @@ from app.modules.auth.auth_types import (
     CodeLoginRequest,
     CurrentUser,
     EmailLoginRequest,
+    GenerateApiKeyRequest,
     GenerateApiKeyResponse,
     LoginCodeResponse,
     LoginResponse,
@@ -168,6 +169,7 @@ async def post_set_password(
     responses={**ResponseDocs.unauthorized_response},
 )
 async def post_generate_api_key(
+    body: GenerateApiKeyRequest,
     request: Request,
     user: Annotated[CurrentUser, Depends(auth_user)],
 ) -> GenerateApiKeyResponse:
@@ -175,4 +177,4 @@ async def post_generate_api_key(
     Generate a new API key for the authenticated user.
     The raw key is returned once — store it securely as it cannot be retrieved again.
     """
-    return await generate_api_key(request, user)
+    return await generate_api_key(body, request, user)

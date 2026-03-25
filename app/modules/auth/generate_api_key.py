@@ -6,11 +6,11 @@ from fastapi import Request
 from app.common.db import DbCollection
 from app.common.responses import InternalServerErrorException
 from app.common.types import AsyncDatabase
-from app.modules.auth.auth_types import CurrentUser, GenerateApiKeyResponse
+from app.modules.auth.auth_types import CurrentUser, GenerateApiKeyRequest, GenerateApiKeyResponse
 from app.modules.auth.auth_utils import generate_api_key_data
 
 
-async def generate_api_key(request: Request, user: CurrentUser) -> GenerateApiKeyResponse:
+async def generate_api_key(body: GenerateApiKeyRequest, request: Request, user: CurrentUser) -> GenerateApiKeyResponse:
     """
     Generate a new API key for the authenticated user.
     The raw key is returned once and never stored — only its SHA-256 hash is persisted.
@@ -25,6 +25,7 @@ async def generate_api_key(request: Request, user: CurrentUser) -> GenerateApiKe
         api_key_doc = {
             "id": key_id,
             "user_id": user.id,
+            "name": body.name,
             "hashed_key": hashed_key,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "last_used_at": None,
