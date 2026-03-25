@@ -8,12 +8,14 @@ from app.modules.auth.auth_types import (
     CodeLoginRequest,
     CurrentUser,
     EmailLoginRequest,
+    GenerateApiKeyResponse,
     LoginCodeResponse,
     LoginResponse,
     PasswordLoginRequest,
     SsoLoginRequest,
 )
 from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.generate_api_key import generate_api_key
 from app.modules.auth.instant_login_code import instant_login_code
 from app.modules.auth.password_login import password_login
 from app.modules.auth.password_signup import password_signup
@@ -157,3 +159,20 @@ async def post_set_password(
     This works for setting a password for the first time or updating an existing password.
     """
     return await set_password(body, request, user)
+
+
+@router.post(
+    path="/api-key",
+    summary="Generate a new API key",
+    status_code=status.HTTP_201_CREATED,
+    responses={**ResponseDocs.unauthorized_response},
+)
+async def post_generate_api_key(
+    request: Request,
+    user: Annotated[CurrentUser, Depends(auth_user)],
+) -> GenerateApiKeyResponse:
+    """
+    Generate a new API key for the authenticated user.
+    The raw key is returned once — store it securely as it cannot be retrieved again.
+    """
+    return await generate_api_key(request, user)

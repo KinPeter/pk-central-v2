@@ -72,6 +72,11 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
             .find({"user_id": user.id})
             .to_list(length=None)
         )
+        api_keys = (
+            await db.get_collection(DbCollection.API_KEYS)
+            .find({"user_id": user.id})
+            .to_list(length=None)
+        )
         aircrafts = (
             await db.get_collection(DbCollection.AIRCRAFTS).find().to_list(length=None)
         )
@@ -100,6 +105,7 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
         shortcuts = remove_ids(shortcuts)
         birthdays = remove_ids(birthdays)
         documents = remove_ids(documents)
+        api_keys = remove_ids(api_keys)
         aircrafts = remove_ids(aircrafts)
         airlines = remove_ids(airlines)
         airports = remove_ids(airports)
@@ -148,6 +154,10 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
             EmailAttachment(
                 content=json.dumps(documents, default=str, ensure_ascii=False),
                 filename=f"documents.json",
+            ),
+            EmailAttachment(
+                content=json.dumps(api_keys, default=str, ensure_ascii=False),
+                filename=f"api_keys.json",
             ),
             EmailAttachment(
                 content=json.dumps(aircrafts, default=str, ensure_ascii=False),

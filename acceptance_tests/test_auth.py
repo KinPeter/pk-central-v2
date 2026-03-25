@@ -292,6 +292,60 @@ class TestSetPassword:
         assert response.status_code == 422
 
 
+class TestGenerateApiKey:
+    def test_success(self, client, login_user):
+        token, user_id, _ = login_user
+
+        response = client.post(
+            "/auth/api-key",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert "id" in data
+        assert "apiKey" in data
+
+    def test_api_key_has_pk_prefix(self, client, login_user):
+        token, _, _ = login_user
+
+        response = client.post(
+            "/auth/api-key",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 201
+        assert response.json()["apiKey"].startswith("pk_")
+
+    def test_each_call_generates_unique_key(self, client, login_user):
+        token, _, _ = login_user
+
+        response1 = client.post(
+            "/auth/api-key",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        response2 = client.post(
+            "/auth/api-key",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response1.status_code == 201
+        assert response2.status_code == 201
+        assert response1.json()["apiKey"] != response2.json()["apiKey"]
+        assert response1.json()["id"] != response2.json()["id"]
+
+    def test_invalid_token(self, client):
+        response = client.post(
+            "/auth/api-key",
+            headers={"Authorization": "Bearer invalid_token"},
+        )
+        assert response.status_code == 401
+        data = response.json()
+        assert "detail" in data
+        assert "Invalid token" in data["detail"]
+
+    def test_no_token(self, client):
+        response = client.post("/auth/api-key")
+        assert response.status_code == 403
+
+
 class TestInitialUserConfigCreation:
     def test_success(self, client, login_user):
         token, user_id, email = login_user

@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from app.modules.auth.auth_utils import (
     get_access_token,
+    generate_api_key_data,
     get_hashed,
     verify_token,
     get_login_code,
@@ -251,3 +252,31 @@ class TestVerifyPassword:
         hashed_password = base64.b64encode(hash_bytes).decode("utf-8")
         with pytest.raises(UnauthorizedException):
             verify_password(raw_password, hashed_password, salt)
+
+
+class TestGenerateApiKeyData:
+    def test_raw_key_has_pk_prefix(self):
+        raw_key, _ = generate_api_key_data()
+        assert raw_key.startswith("pk_")
+
+    def test_raw_key_has_sufficient_length(self):
+        raw_key, _ = generate_api_key_data()
+        # "pk_" + token_urlsafe(32) produces at least 40+ chars
+        assert len(raw_key) > 40
+
+    def test_hashed_key_is_sha256_hex(self):
+        _, hashed_key = generate_api_key_data()
+        # SHA-256 hex digest is always 64 characters
+        assert len(hashed_key) == 64
+        assert all(c in "0123456789abcdef" for c in hashed_key)
+
+    def test_hashed_key_matches_sha256_of_raw_key(self):
+        raw_key, hashed_key = generate_api_key_data()
+        expected = hashlib.sha256(raw_key.encode()).hexdigest()
+        assert hashed_key == expected
+
+    def test_each_call_produces_unique_keys(self):
+        raw1, hash1 = generate_api_key_data()
+        raw2, hash2 = generate_api_key_data()
+        assert raw1 != raw2
+        assert hash1 != hash2

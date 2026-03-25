@@ -3,6 +3,7 @@ import hashlib
 import jwt
 import os
 import random
+import secrets
 import time
 from datetime import datetime, timedelta, timezone
 from logging import Logger
@@ -86,6 +87,13 @@ def verify_login_code(
     if hash_b64 != hashed_code:
         raise UnauthorizedException(reason="Invalid login code")
     return True
+
+
+def generate_api_key_data() -> tuple[str, str]:
+    random_part = secrets.token_urlsafe(32)
+    raw_key = f"pk_{random_part}"
+    hashed_key = hashlib.sha256(raw_key.encode()).hexdigest()
+    return raw_key, hashed_key
 
 
 def verify_password(raw_password: str, hashed_password: str, salt: str) -> bool:

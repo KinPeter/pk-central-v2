@@ -19,6 +19,7 @@ class DbCollection(str, Enum):
     VISITS = "visits"
     REDDIT = "reddit"
     DOCUMENTS = "documents"
+    API_KEYS = "api_keys"
     # Static data collections
     AIRLINES = "airlines"
     AIRPORTS = "airports"

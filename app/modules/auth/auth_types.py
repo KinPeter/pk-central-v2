@@ -85,3 +85,15 @@ class LoginResponse(OkResponse):
 
 class LoginCodeResponse(OkResponse):
     login_code: str
+
+
+class ApiKey(BaseEntity):
+    user_id: str
+    hashed_key: str
+    created_at: str
+    last_used_at: str | None
+
+
+class GenerateApiKeyResponse(OkResponse):
+    id: str
+    api_key: str
