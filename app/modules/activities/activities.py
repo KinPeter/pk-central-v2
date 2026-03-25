@@ -14,7 +14,7 @@ from app.modules.activities.delete_chore import delete_chore
 from app.modules.activities.update_chore import update_chore
 from app.modules.activities.update_goals import update_goals
 from app.modules.auth.auth_types import CurrentUser
-from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.auth_utils import auth_user_or_api_key
 
 
 router = APIRouter(tags=["Activities"], prefix="/activities")
@@ -28,7 +28,7 @@ router = APIRouter(tags=["Activities"], prefix="/activities")
 )
 async def get_get_activities(
     request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ActivitiesConfig:
     """
     Get the Activities config for the user.
@@ -45,7 +45,7 @@ async def get_get_activities(
 async def patch_update_goals(
     request: Request,
     body: GoalsRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ActivitiesConfig:
     """
     Update the activity goals for the current user.
@@ -62,7 +62,7 @@ async def patch_update_goals(
 async def post_add_chore(
     request: Request,
     body: ChoreRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ActivitiesConfig:
     """
     Add a new cycling chore for the current user.
@@ -80,7 +80,7 @@ async def put_update_chore(
     request: Request,
     id: str,
     body: ChoreRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ActivitiesConfig:
     """
     Update an existing cycling chore for the current user.
@@ -97,7 +97,7 @@ async def put_update_chore(
 async def delete_delete_chore(
     request: Request,
     id: str,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ActivitiesConfig:
     """
     Delete a cycling chore for the current user.

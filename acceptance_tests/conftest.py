@@ -58,6 +58,19 @@ def login_user(client, user_email):
     return data["token"], data["id"], data["email"]
 
 
+@pytest.fixture
+def api_key(client, login_user):
+    """Generate an API key for the logged-in user."""
+    token, *_ = login_user
+    response = client.post(
+        "/auth/api-key",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"name": "Test API Key"},
+    )
+    assert response.status_code == 201
+    return response.json()["apiKey"]
+
+
 def pytest_sessionstart(session):
     """Initialize the test environment before any tests run."""
     print("\nSetting up test environment...")

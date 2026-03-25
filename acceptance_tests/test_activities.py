@@ -1,5 +1,13 @@
 import pytest
 
+# Parametrize cases covering all invalid auth scenarios for endpoints that
+# support both Bearer token and API key authentication.
+AUTH_ERROR_CASES = [
+    pytest.param({}, id="no_auth"),
+    pytest.param({"X-PK-Api-Key": "pk_invalid_key"}, id="invalid_api_key"),
+    pytest.param({"Authorization": "Bearer invalid.jwt.token"}, id="invalid_bearer"),
+]
+
 
 class TestUpdateGoals:
     def test_update_goals_success(self, client, login_user):
@@ -102,16 +110,49 @@ class TestUpdateGoals:
             data = response.json()
             assert "detail" in data
 
-    def test_update_goals_unauthorized(self, client):
-        # No token provided
+    def test_get_activities_with_api_key(self, client, api_key):
+        response = client.get(
+            "/activities",
+            headers={"X-PK-Api-Key": api_key},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] is not None
+
+    def test_update_goals_with_api_key(self, client, api_key):
+        body = {
+            "walkWeeklyGoal": 500,
+            "walkMonthlyGoal": 2000,
+            "cyclingWeeklyGoal": 100,
+            "cyclingMonthlyGoal": 400,
+        }
+        response = client.patch(
+            "/activities/goals",
+            headers={"X-PK-Api-Key": api_key},
+            json=body,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["walkWeeklyGoal"] == 500
+        assert data["walkMonthlyGoal"] == 2000
+        assert data["cyclingWeeklyGoal"] == 100
+        assert data["cyclingMonthlyGoal"] == 400
+
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_get_activities_auth_errors(self, client, headers):
+        response = client.get("/activities", headers=headers)
+        assert response.status_code == 401
+
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_update_goals_auth_errors(self, client, headers):
         body = {
             "walkWeeklyGoal": 1000,
             "walkMonthlyGoal": 4000,
             "cyclingWeeklyGoal": 200,
             "cyclingMonthlyGoal": 800,
         }
-        response = client.patch("/activities/goals", json=body)
-        assert response.status_code in (401, 403)
+        response = client.patch("/activities/goals", headers=headers, json=body)
+        assert response.status_code == 401
 
 
 class TestAddChore:
@@ -195,15 +236,34 @@ class TestAddChore:
             data = response.json()
             assert "detail" in data and isinstance(data["detail"], list)
 
-    def test_add_chore_unauthorized(self, client):
-        # No token provided
+    def test_add_chore_with_api_key(self, client, api_key):
+        body = {
+            "name": "API Key Chore",
+            "kmInterval": 30,
+            "lastKm": 0.0,
+        }
+        response = client.post(
+            "/activities/chores",
+            headers={"X-PK-Api-Key": api_key},
+            json=body,
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert len(data["chores"]) == 1
+        chore = data["chores"][0]
+        assert chore["name"] == "API Key Chore"
+        assert chore["kmInterval"] == 30
+        assert chore["lastKm"] == 0.0
+
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_add_chore_auth_errors(self, client, headers):
         body = {
             "name": "Test Chore",
             "kmInterval": 30,
             "lastKm": 0.0,
         }
-        response = client.post("/activities/chores", json=body)
-        assert response.status_code in (401, 403)
+        response = client.post("/activities/chores", headers=headers, json=body)
+        assert response.status_code == 401
 
 
 class TestUpdateChore:
@@ -317,6 +377,46 @@ class TestUpdateChore:
             assert "detail" in data
             assert "Not Found: Chore" in data["detail"]
 
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_update_chore_auth_errors(self, client, headers):
+        # Auth is checked before resource lookup, so the chore ID doesn't need to exist
+        body = {"name": "Chore", "kmInterval": 50, "lastKm": 0.0}
+        response = client.put("/activities/chores/some-chore-id", headers=headers, json=body)
+        assert response.status_code == 401
+
+    def test_update_chore_with_api_key(self, client, api_key):
+        # Create a chore using the api key
+        body = {
+            "name": "Initial Chore",
+            "kmInterval": 50,
+            "lastKm": 10.0,
+        }
+        response = client.post(
+            "/activities/chores",
+            headers={"X-PK-Api-Key": api_key},
+            json=body,
+        )
+        assert response.status_code == 201
+        chore_id = response.json()["chores"][0]["id"]
+
+        # Update the chore using the api key
+        update_body = {
+            "name": "Updated via API Key",
+            "kmInterval": 100,
+            "lastKm": 200.0,
+        }
+        response = client.put(
+            f"/activities/chores/{chore_id}",
+            headers={"X-PK-Api-Key": api_key},
+            json=update_body,
+        )
+        assert response.status_code == 200
+        chore = response.json()["chores"][0]
+        assert chore["id"] == chore_id
+        assert chore["name"] == "Updated via API Key"
+        assert chore["kmInterval"] == 100
+        assert chore["lastKm"] == 200.0
+
 
 class TestDeleteChore:
     def test_delete_chore_success(self, client, login_user):
@@ -355,6 +455,35 @@ class TestDeleteChore:
         assert response.status_code == 200
         data = response.json()
         assert len(data["chores"]) == 0
+
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_delete_chore_auth_errors(self, client, headers):
+        # Auth is checked before resource lookup, so the chore ID doesn't need to exist
+        response = client.delete("/activities/chores/some-chore-id", headers=headers)
+        assert response.status_code == 401
+
+    def test_delete_chore_with_api_key(self, client, api_key):
+        # Create a chore using the api key
+        body = {
+            "name": "Chore to Delete",
+            "kmInterval": 50,
+            "lastKm": 10.0,
+        }
+        response = client.post(
+            "/activities/chores",
+            headers={"X-PK-Api-Key": api_key},
+            json=body,
+        )
+        assert response.status_code == 201
+        chore_id = response.json()["chores"][0]["id"]
+
+        # Delete the chore using the api key
+        response = client.delete(
+            f"/activities/chores/{chore_id}",
+            headers={"X-PK-Api-Key": api_key},
+        )
+        assert response.status_code == 200
+        assert len(response.json()["chores"]) == 0
 
     @pytest.mark.parametrize(
         "chore_id,expected_status",
