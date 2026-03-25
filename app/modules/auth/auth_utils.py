@@ -7,7 +7,7 @@ import secrets
 import time
 from datetime import datetime, timedelta, timezone
 from logging import Logger
-from fastapi import Request, Security
+from fastapi import Header, Request, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 from typing import Annotated
@@ -107,29 +107,11 @@ def verify_password(raw_password: str, hashed_password: str, salt: str) -> bool:
     return True
 
 
-async def auth_user(
-    request: Request,
-    credentials: Annotated[HTTPAuthorizationCredentials, Security(HTTPBearer())],
+async def _get_user_by_id(
+    user_id: str, db: AsyncDatabase, logger: Logger
 ) -> CurrentUser:
-    """
-    Authenticate the user based on the provided token in the request.
-    This function retrieves the user ID from the token, fetches the user data from the database,
-    and returns the current user object if the token is valid.
-    Used as a dependency in routes that require authentication.
-    """
-    db: AsyncDatabase = request.app.state.db
-    logger: Logger = request.app.state.logger
-    env: PkCentralEnv = request.app.state.env
-    token = credentials.credentials
-
-    user_id: str = verify_token(token, env.JWT_SECRET)
-
-    if not user_id:
-        raise UnauthorizedException(reason="Invalid token")
-
     try:
-        user_collection = db.get_collection(DbCollection.USERS)
-        user = await user_collection.find_one({"id": user_id})
+        user = await db.get_collection(DbCollection.USERS).find_one({"id": user_id})
     except Exception as e:
         logger.error(f"Error fetching user {user_id}: {e}")
         raise InternalServerErrorException(detail="Failed to fetch user data" + str(e))
@@ -138,3 +120,80 @@ async def auth_user(
         raise UnauthorizedException(reason="Invalid token")
 
     return CurrentUser(id=user_id, email=user["email"])
+
+
+async def auth_user(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials, Security(HTTPBearer())],
+) -> CurrentUser:
+    """
+    Authenticate the user based on the provided JWT bearer token.
+    Used as a dependency in routes that require authentication.
+    """
+    db: AsyncDatabase = request.app.state.db
+    logger: Logger = request.app.state.logger
+    env: PkCentralEnv = request.app.state.env
+
+    user_id: str = verify_token(credentials.credentials, env.JWT_SECRET)
+    return await _get_user_by_id(user_id, db, logger)
+
+
+async def auth_api_key(
+    request: Request,
+    api_key: Annotated[str, Header(alias="X-PK-Api-Key")],
+) -> CurrentUser:
+    """
+    Authenticate the user based on the X-PK-Api-Key request header.
+    Used as a dependency in routes that accept API key authentication only.
+    """
+    db: AsyncDatabase = request.app.state.db
+    logger: Logger = request.app.state.logger
+
+    hashed = hashlib.sha256(api_key.encode()).hexdigest()
+
+    try:
+        doc = await db.get_collection(DbCollection.API_KEYS).find_one(
+            {"hashed_key": hashed}
+        )
+    except Exception as e:
+        logger.error(f"Error looking up API key: {e}")
+        raise InternalServerErrorException(detail="Failed to validate API key")
+
+    if not doc:
+        raise UnauthorizedException(reason="Invalid API key")
+
+    try:
+        await db.get_collection(DbCollection.API_KEYS).update_one(
+            {"hashed_key": hashed},
+            {"$set": {"last_used_at": datetime.now(timezone.utc).isoformat()}},
+        )
+    except Exception as e:
+        logger.error(f"Error updating last_used_at for API key {doc['id']}: {e}")
+
+    return await _get_user_by_id(doc["user_id"], db, logger)
+
+
+async def auth_user_or_api_key(
+    request: Request,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Security(HTTPBearer(auto_error=False)),
+    ] = None,
+    api_key: Annotated[str | None, Header(alias="X-PK-Api-Key")] = None,
+) -> CurrentUser:
+    """
+    Authenticate the user via either a JWT bearer token or X-PK-Api-Key header.
+    API key takes priority when both are provided.
+    Used as a dependency in routes that accept either authentication method.
+    """
+    if api_key:
+        return await auth_api_key(request, api_key)
+
+    if credentials:
+        db: AsyncDatabase = request.app.state.db
+        logger: Logger = request.app.state.logger
+        env: PkCentralEnv = request.app.state.env
+        user_id: str = verify_token(credentials.credentials, env.JWT_SECRET)
+        return await _get_user_by_id(user_id, db, logger)
+
+    raise UnauthorizedException(reason="Authentication required")
