@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query, status, Request
 
 from app.common.responses import ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
-from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.auth_utils import auth_user_or_api_key
 from app.modules.flights.flights_types import Aircraft, Airline
 from app.modules.trips.get_trips import get_trips
 from app.modules.trips.aircrafts import search_aircrafts
@@ -29,7 +29,7 @@ async def get_get_airport_data(
     iata: Annotated[
         str, Query(description="IATA code of the airport", pattern=r"^[a-zA-Z]{3}$")
     ],
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> AirportResponse:
     """
     Get airport data based on the provided IATA code.
@@ -48,7 +48,7 @@ async def get_get_airport_data(
 async def get_search_aircrafts(
     request: Request,
     search: Annotated[str, Query(description="Search query for aircrafts")],
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ListResponse[Aircraft]:
     """
     Search for aircrafts based on the provided query.
@@ -66,7 +66,7 @@ async def get_search_aircrafts(
 )
 async def get_search_airlines(
     request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
     iata: (
         Annotated[
             str | None,

@@ -5,7 +5,7 @@ from app.common.crud_handler import CrudHandler
 from app.common.db import DbCollection
 from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
-from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.auth_utils import auth_user_or_api_key
 from app.modules.docs.docs_types import (
     Document,
     DocumentListItem,
@@ -26,7 +26,7 @@ router = APIRouter(tags=["Documents"], prefix="/docs")
 )
 async def get_get_documents(
     request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ListResponse[DocumentListItem]:
     """
     Get the list of documents for the user.
@@ -49,7 +49,7 @@ async def get_get_documents(
 async def get_get_document_by_id(
     request: Request,
     id: str,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Document:
     """
     Get a specific document by its ID.
@@ -72,7 +72,7 @@ async def get_get_document_by_id(
 async def post_create_document(
     request: Request,
     body: DocumentRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Document:
     """
     Create a new document for the user.
@@ -95,7 +95,7 @@ async def put_update_document(
     request: Request,
     id: str,
     body: DocumentRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Document:
     """
     Update an existing document for the user.
@@ -117,7 +117,7 @@ async def put_update_document(
 async def delete_delete_document(
     request: Request,
     id: str,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> IdResponse:
     """
     Delete a document for the user.

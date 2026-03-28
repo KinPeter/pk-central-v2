@@ -5,7 +5,7 @@ from app.common.crud_handler import CrudHandler
 from app.common.db import DbCollection
 from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
-from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.auth_utils import auth_user_or_api_key
 from app.modules.flights.flights_types import Flight, FlightRequest
 from app.modules.flights.flights_utils import to_flight
 from app.modules.flights.get_flights import get_flights
@@ -22,7 +22,7 @@ router = APIRouter(tags=["Flights"], prefix="/flights")
 )
 async def get_get_flights(
     request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
     is_planned: bool | None = None,
 ) -> ListResponse[Flight]:
     """
@@ -46,7 +46,7 @@ async def get_get_flights(
 async def post_create_flight(
     request: Request,
     body: FlightRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Flight:
     """
     Create a new flight for the user.
@@ -69,7 +69,7 @@ async def put_update_flight(
     request: Request,
     id: str,
     body: FlightRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Flight:
     """
     Update an existing flight for the user.
@@ -91,7 +91,7 @@ async def put_update_flight(
 async def delete_delete_flight(
     request: Request,
     id: str,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> IdResponse:
     """
     Delete a flight for the user.

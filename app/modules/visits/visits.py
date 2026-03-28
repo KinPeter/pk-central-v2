@@ -5,7 +5,7 @@ from app.common.crud_handler import CrudHandler
 from app.common.db import DbCollection
 from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
-from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.auth_utils import auth_user_or_api_key
 from app.modules.visits.visits_types import Visit, VisitRequest
 from app.modules.visits.visits_utils import to_visit
 
@@ -21,7 +21,7 @@ router = APIRouter(tags=["Visits"], prefix="/visits")
 )
 async def get_get_visits(
     request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ListResponse[Visit]:
     """
     Get all visits for the user.
@@ -43,7 +43,7 @@ async def get_get_visits(
 async def post_create_visit(
     request: Request,
     body: VisitRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Visit:
     """
     Create a new visit for the user.
@@ -66,7 +66,7 @@ async def put_update_visit(
     request: Request,
     id: str,
     body: VisitRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Visit:
     """
     Update an existing visit for the user.
@@ -88,7 +88,7 @@ async def put_update_visit(
 async def delete_delete_visit(
     request: Request,
     id: str,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> IdResponse:
     """
     Delete a visit for the user.

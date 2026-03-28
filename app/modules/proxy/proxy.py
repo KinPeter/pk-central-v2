@@ -1,9 +1,9 @@
 from typing_extensions import Annotated
 from fastapi import APIRouter, Depends, Request, status
 
-from app.common.responses import ListResponse, ResponseDocs
+from app.common.responses import ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
-from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.auth_utils import auth_user_or_api_key
 from app.modules.proxy.location.get_city import get_city
 from app.modules.proxy.location.location_types import CityLocation
 from app.modules.proxy.translate.translate import translate
@@ -24,7 +24,7 @@ router = APIRouter(tags=["Proxy"], prefix="/proxy")
 async def post_translate(
     request: Request,
     body: TranslationRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Translation:
     """
     Translate text using the DeepL API.
@@ -43,7 +43,7 @@ async def post_translate(
 )
 async def get_get_city(
     request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
     lat: float,
     lng: float,
 ) -> CityLocation:

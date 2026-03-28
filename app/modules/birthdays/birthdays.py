@@ -5,7 +5,7 @@ from app.common.crud_handler import CrudHandler
 from app.common.db import DbCollection
 from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
-from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.auth_utils import auth_user_or_api_key
 from app.modules.birthdays.birthdays_types import Birthday, BirthdayRequest
 from app.modules.birthdays.birthdays_utils import to_birthday
 
@@ -21,7 +21,7 @@ router = APIRouter(tags=["Birthdays"], prefix="/birthdays")
 )
 async def get_get_birthdays(
     request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ListResponse[Birthday]:
     """
     Get all birthdays for the user.
@@ -43,7 +43,7 @@ async def get_get_birthdays(
 async def post_create_birthday(
     request: Request,
     body: BirthdayRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Birthday:
     """
     Create a new birthday for the user.
@@ -66,7 +66,7 @@ async def put_update_birthday(
     request: Request,
     id: str,
     body: BirthdayRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Birthday:
     """
     Update an existing birthday for the user.
@@ -88,7 +88,7 @@ async def put_update_birthday(
 async def delete_delete_birthday(
     request: Request,
     id: str,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> IdResponse:
     """
     Delete a birthday for the user.

@@ -5,7 +5,7 @@ from app.common.crud_handler import CrudHandler
 from app.common.db import DbCollection
 from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
-from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.auth_utils import auth_user_or_api_key
 from app.modules.personal_data.personal_data_types import (
     PersonalData,
     PersonalDataRequest,
@@ -24,7 +24,7 @@ router = APIRouter(tags=["Personal Data"], prefix="/personal-data")
 )
 async def get_get_personal_datas(
     request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ListResponse[PersonalData]:
     """
     Get all personal data for the user.
@@ -46,7 +46,7 @@ async def get_get_personal_datas(
 async def post_create_personal_data(
     request: Request,
     body: PersonalDataRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> PersonalData:
     """
     Create a new personal data for the user.
@@ -69,7 +69,7 @@ async def put_update_personal_data(
     request: Request,
     id: str,
     body: PersonalDataRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> PersonalData:
     """
     Update an existing personal data for the user.
@@ -91,7 +91,7 @@ async def put_update_personal_data(
 async def delete_delete_personal_data(
     request: Request,
     id: str,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> IdResponse:
     """
     Delete a personal data for the user.

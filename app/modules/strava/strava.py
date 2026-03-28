@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, Request, status
 
 from app.common.responses import ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
-from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.auth_utils import auth_user, auth_user_or_api_key
 from app.modules.strava.create_routemap import create_routemap
 from app.modules.strava.strava_types import (
     StravaActivityType,
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/strava", tags=["Strava"])
 )
 async def post_sync_strava_routes(
     request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
     strava_token: Annotated[str, Query(description="Strava access token")],
     force: Annotated[
         bool | None, Query(description="Force sync all activities")

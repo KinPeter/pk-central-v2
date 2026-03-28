@@ -5,7 +5,7 @@ from app.common.crud_handler import CrudHandler
 from app.common.db import DbCollection
 from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
-from app.modules.auth.auth_utils import auth_user
+from app.modules.auth.auth_utils import auth_user_or_api_key
 from app.modules.notes.notes_types import Note, NoteRequest
 from app.modules.notes.notes_utils import to_note
 
@@ -21,7 +21,7 @@ router = APIRouter(tags=["Notes"], prefix="/notes")
 )
 async def get_get_notes(
     request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> ListResponse[Note]:
     """
     Get all notes for the user.
@@ -43,7 +43,7 @@ async def get_get_notes(
 async def post_create_note(
     request: Request,
     body: NoteRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Note:
     """
     Create a new note for the user.
@@ -66,7 +66,7 @@ async def put_update_note(
     request: Request,
     id: str,
     body: NoteRequest,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> Note:
     """
     Update an existing note for the user.
@@ -88,7 +88,7 @@ async def put_update_note(
 async def delete_delete_note(
     request: Request,
     id: str,
-    user: Annotated[CurrentUser, Depends(auth_user)],
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
 ) -> IdResponse:
     """
     Delete a note for the user.
