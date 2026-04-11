@@ -1,6 +1,8 @@
 from typing_extensions import Annotated
 from fastapi import APIRouter, Depends, Query, status, Request
+from pydantic import Field
 
+from app.common.constants import YEAR_REGEX
 from app.common.responses import ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user_or_api_key
@@ -169,8 +171,12 @@ async def post_user_trips_maps(
 async def get_user_trips(
     request: Request,
     user_id: str,
+    year: Annotated[
+        list[Annotated[str, Field(pattern=YEAR_REGEX)]] | None,
+        Query(description="Filter by year(s), e.g. 2024"),
+    ] = None,
 ) -> Trips:
     """
     Get trips data for a specific user.
     """
-    return await get_trips(request, user_id=user_id)
+    return await get_trips(request, user_id=user_id, year=year)

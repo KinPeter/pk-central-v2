@@ -7,7 +7,7 @@ from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user_or_api_key
 from app.modules.flights.flights_types import Flight, FlightQuery, FlightRequest
-from app.modules.flights.flights_utils import to_flight
+from app.modules.flights.flights_utils import to_flight, upsert_airports_from_flight
 from app.modules.flights.get_flights import get_flights
 from app.modules.flights.query_flights import query_flights
 
@@ -69,12 +69,14 @@ async def post_create_flight(
     """
     Create a new flight for the user.
     """
-    return await CrudHandler[Flight](
+    result = await CrudHandler[Flight](
         request=request,
         user=user,
         collection_name=DbCollection.FLIGHTS,
         entity_name="Flight",
     ).create(body, mapper_fn=to_flight)
+    upsert_airports_from_flight(request.app.state.db, body, request.app.state.logger)
+    return result
 
 
 @router.put(
@@ -92,12 +94,14 @@ async def put_update_flight(
     """
     Update an existing flight for the user.
     """
-    return await CrudHandler[Flight](
+    result = await CrudHandler[Flight](
         request=request,
         user=user,
         collection_name=DbCollection.FLIGHTS,
         entity_name="Flight",
     ).update(id, body, mapper_fn=to_flight)
+    upsert_airports_from_flight(request.app.state.db, body, request.app.state.logger)
+    return result
 
 
 @router.delete(

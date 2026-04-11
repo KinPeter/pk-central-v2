@@ -398,3 +398,71 @@ class TestUserTripsMapsPublic:
         _, user_id, _ = login_user
         response = client.post(f"/trips/{user_id}/maps", json={"year": ["2024-01"]})
         assert response.status_code == 422
+
+
+# ── GET /trips/{user_id} (public, with optional year filter) ─────────────────
+
+class TestGetUserTrips:
+    def test_no_filter_returns_all_flights_and_visits(self, client, login_user):
+        token, user_id, _ = login_user
+        create_flight(client, token, FLIGHT_FRA_JFK)
+        create_flight(client, token, FLIGHT_LHR_CDG_2023)
+        create_visit(client, token, VISIT_PARIS_2023)
+        create_visit(client, token, VISIT_BERLIN_2024)
+
+        response = client.get(f"/trips/{user_id}")
+        assert response.status_code == 200
+        data = response.json()
+
+        assert len(data["flights"]) == 2
+        assert len(data["visits"]) == 2
+
+    def test_year_filter_returns_only_matching_flights_and_visits(self, client, login_user):
+        token, user_id, _ = login_user
+        create_flight(client, token, FLIGHT_FRA_JFK)        # 2024
+        create_flight(client, token, FLIGHT_LHR_CDG_2023)  # 2023
+        create_visit(client, token, VISIT_PARIS_2023)       # 2023
+        create_visit(client, token, VISIT_BERLIN_2024)      # 2024
+
+        response = client.get(f"/trips/{user_id}?year=2024")
+        assert response.status_code == 200
+        data = response.json()
+
+        assert len(data["flights"]) == 1
+        assert data["flights"][0]["date"] == FLIGHT_FRA_JFK["date"]
+        assert len(data["visits"]) == 1
+        assert data["visits"][0]["city"] == "Berlin"
+
+    def test_multi_year_filter_returns_matching_flights_and_visits(self, client, login_user):
+        token, user_id, _ = login_user
+        create_flight(client, token, FLIGHT_FRA_JFK)        # 2024
+        create_flight(client, token, FLIGHT_LHR_CDG_2023)  # 2023
+        create_visit(client, token, VISIT_PARIS_2023)       # 2023
+        create_visit(client, token, VISIT_BERLIN_2024)      # 2024
+        create_visit(client, token, VISIT_TOKYO_NO_YEAR)    # no year → excluded
+
+        response = client.get(f"/trips/{user_id}?year=2024&year=2023")
+        assert response.status_code == 200
+        data = response.json()
+
+        assert len(data["flights"]) == 2
+        assert len(data["visits"]) == 2
+
+    def test_unknown_user_returns_empty(self, client):
+        response = client.get("/trips/nonexistent-user-id")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["flights"] == []
+        assert data["visits"] == []
+
+    def test_no_auth_required(self, client, login_user):
+        token, user_id, _ = login_user
+        create_flight(client, token, FLIGHT_FRA_JFK)
+
+        response = client.get(f"/trips/{user_id}")
+        assert response.status_code == 200
+
+    def test_invalid_year_format_returns_422(self, client, login_user):
+        _, user_id, _ = login_user
+        response = client.get(f"/trips/{user_id}?year=24")
+        assert response.status_code == 422
