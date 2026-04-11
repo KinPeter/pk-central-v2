@@ -6,10 +6,12 @@ from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user_or_api_key
 from app.modules.flights.flights_types import Aircraft, Airline
 from app.modules.trips.get_trips import get_trips
+from app.modules.trips.get_trips_stats import get_trips_stats
+from app.modules.trips.get_trips_maps import get_trips_maps
 from app.modules.trips.aircrafts import search_aircrafts
 from app.modules.trips.airlines import search_airlines
 from app.modules.trips.airports import get_airport_data
-from app.modules.trips.trips_types import AirportResponse, Trips
+from app.modules.trips.trips_types import AirportResponse, Trips, TripsStats, TripsStatsRequest, TripsMaps, TripsMapsRequest
 
 
 router = APIRouter(prefix="/trips", tags=["Trips"])
@@ -87,6 +89,76 @@ async def get_search_airlines(
     If both `iata` and `name` are set, IATA code will be prioritized.
     """
     return await search_airlines(request, iata=iata, name=name)
+
+
+@router.post(
+    path="/stats",
+    summary="Get trips stats for the authenticated user",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response},
+)
+async def post_trips_stats(
+    request: Request,
+    body: TripsStatsRequest,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+) -> TripsStats:
+    """
+    Compute stats for the authenticated user's flights and visits.
+    Optionally filter by years or by providing lists of flight or visit IDs.
+    """
+    return await get_trips_stats(request, user_id=user.id, body=body)
+
+
+@router.post(
+    path="/maps",
+    summary="Get trips map data for the authenticated user",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response},
+)
+async def post_trips_maps(
+    request: Request,
+    body: TripsMapsRequest,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+) -> TripsMaps:
+    """
+    Compute map data for the authenticated user's flights and visits.
+    Optionally filter by years or by providing lists of flight or visit IDs.
+    """
+    return await get_trips_maps(request, user_id=user.id, body=body)
+
+
+@router.post(
+    path="/{user_id}/stats",
+    summary="Get trips stats for a user (public)",
+    status_code=status.HTTP_200_OK,
+)
+async def post_user_trips_stats(
+    request: Request,
+    user_id: str,
+    body: TripsStatsRequest,
+) -> TripsStats:
+    """
+    Compute stats for a specific user's flights and visits. No authentication required.
+    Optionally filter by years or by providing lists of flight or visit IDs.
+    """
+    return await get_trips_stats(request, user_id=user_id, body=body)
+
+
+@router.post(
+    path="/{user_id}/maps",
+    summary="Get trips map data for a user (public)",
+    status_code=status.HTTP_200_OK,
+)
+async def post_user_trips_maps(
+    request: Request,
+    user_id: str,
+    body: TripsMapsRequest,
+) -> TripsMaps:
+    """
+    Compute map data for a specific user's flights and visits. No authentication required.
+    Optionally filter by years or by providing lists of flight or visit IDs.
+    """
+    return await get_trips_maps(request, user_id=user_id, body=body)
 
 
 @router.get(
