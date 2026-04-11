@@ -1,6 +1,7 @@
 from enum import Enum
+from typing import Annotated
 from pydantic import Field
-from app.common.constants import SIMPLE_DATE_REGEX_POSSIBLE_PAST, SIMPLE_TIME_REGEX
+from app.common.constants import SIMPLE_DATE_REGEX_POSSIBLE_PAST, SIMPLE_TIME_REGEX, YEAR_REGEX
 from app.common.types import BaseEntity, PkBaseModel
 
 
@@ -66,3 +67,24 @@ class FlightRequest(PkBaseModel):
 
 class Flight(BaseEntity, FlightRequest):
     pass
+
+
+class FlightQuery(PkBaseModel):
+    year: list[Annotated[str, Field(pattern=YEAR_REGEX)]] | None = None
+    is_planned: bool | None = None
+    flight_class: list[FlightClass] | None = None
+    flight_reason: list[FlightReason] | None = None
+    seat_type: list[SeatType] | None = None
+    airline_iata: list[str] | None = None
+    aircraft_icao: list[str] | None = None
+    distance_gt: float | None = None
+    distance_lt: float | None = None
+    city: list[str] | None = None
+    country: list[str] | None = None
+    airport_iata: list[str] | None = None
+    to_city: list[str] | None = None
+    to_country: list[str] | None = None
+    to_airport_iata: list[str] | None = None
+    from_city: list[str] | None = None
+    from_country: list[str] | None = None
+    from_airport_iata: list[str] | None = None

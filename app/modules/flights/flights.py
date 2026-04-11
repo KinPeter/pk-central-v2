@@ -6,9 +6,10 @@ from app.common.db import DbCollection
 from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user_or_api_key
-from app.modules.flights.flights_types import Flight, FlightRequest
+from app.modules.flights.flights_types import Flight, FlightQuery, FlightRequest
 from app.modules.flights.flights_utils import to_flight
 from app.modules.flights.get_flights import get_flights
+from app.modules.flights.query_flights import query_flights
 
 
 router = APIRouter(tags=["Flights"], prefix="/flights")
@@ -35,6 +36,23 @@ async def get_get_flights(
         user=user,
         is_planned=is_planned,
     )
+
+
+@router.post(
+    path="/query",
+    summary="Query Flights",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response},
+)
+async def post_query_flights(
+    request: Request,
+    body: FlightQuery,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+) -> ListResponse[Flight]:
+    """
+    Query flights for the user with optional filters.
+    """
+    return await query_flights(request, user, body)
 
 
 @router.post(
