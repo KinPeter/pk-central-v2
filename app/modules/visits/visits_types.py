@@ -1,6 +1,12 @@
+from typing import Annotated
 from pydantic import Field
 from app.common.constants import YEAR_REGEX
 from app.common.types import BaseEntity, PkBaseModel
+
+
+class VisitQuery(PkBaseModel):
+    year: list[Annotated[str, Field(pattern=YEAR_REGEX)]] | None = None
+    country: list[str] | None = None
 
 
 class VisitRequest(PkBaseModel):

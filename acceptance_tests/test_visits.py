@@ -449,3 +449,110 @@ class TestDeleteVisit:
         data = response.json()
         assert "detail" in data
         assert "Not Found: Visit" in data["detail"]
+
+
+class TestQueryVisits:
+    @pytest.fixture(autouse=True)
+    def setup_visits(self, client, login_user):
+        self.token, _, _ = login_user
+        headers = {"Authorization": f"Bearer {self.token}"}
+
+        visits = [
+            {"city": "Paris", "country": "France", "lat": 48.8566, "lng": 2.3522, "year": "2022"},
+            {"city": "Lyon", "country": "France", "lat": 45.748, "lng": 4.847, "year": "2023"},
+            {"city": "Seoul", "country": "Korea", "lat": 37.5665, "lng": 126.978, "year": "2023"},
+        ]
+        for v in visits:
+            client.post("/visits/", headers=headers, json=v)
+
+        self.client = client
+
+    def test_filter_by_single_year(self):
+        response = self.client.post(
+            "/visits/query",
+            headers={"Authorization": f"Bearer {self.token}"},
+            json={"year": ["2022"]},
+        )
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert len(entities) == 1
+        assert entities[0]["city"] == "Paris"
+
+    def test_filter_by_multiple_years(self):
+        response = self.client.post(
+            "/visits/query",
+            headers={"Authorization": f"Bearer {self.token}"},
+            json={"year": ["2022", "2023"]},
+        )
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert len(entities) == 3
+
+    def test_filter_by_single_country(self):
+        response = self.client.post(
+            "/visits/query",
+            headers={"Authorization": f"Bearer {self.token}"},
+            json={"country": ["France"]},
+        )
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert len(entities) == 2
+        assert all(e["country"] == "France" for e in entities)
+
+    def test_filter_by_multiple_countries(self):
+        response = self.client.post(
+            "/visits/query",
+            headers={"Authorization": f"Bearer {self.token}"},
+            json={"country": ["France", "Korea"]},
+        )
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert len(entities) == 3
+
+    def test_filter_by_year_and_country(self):
+        response = self.client.post(
+            "/visits/query",
+            headers={"Authorization": f"Bearer {self.token}"},
+            json={"year": ["2023"], "country": ["France"]},
+        )
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert len(entities) == 1
+        assert entities[0]["city"] == "Lyon"
+
+    def test_no_filters_returns_all(self):
+        response = self.client.post(
+            "/visits/query",
+            headers={"Authorization": f"Bearer {self.token}"},
+            json={},
+        )
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert len(entities) == 3
+
+    def test_filter_with_no_matches(self):
+        response = self.client.post(
+            "/visits/query",
+            headers={"Authorization": f"Bearer {self.token}"},
+            json={"year": ["1999"]},
+        )
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert len(entities) == 0
+
+    def test_invalid_token(self):
+        response = self.client.post(
+            "/visits/query",
+            headers={"Authorization": "Bearer invalid_token"},
+            json={"year": ["2022"]},
+        )
+        assert response.status_code == 401
+        assert "Invalid token" in response.json()["detail"]
+
+    def test_invalid_year_format(self):
+        response = self.client.post(
+            "/visits/query",
+            headers={"Authorization": f"Bearer {self.token}"},
+            json={"year": ["not-a-year"]},
+        )
+        assert response.status_code == 422

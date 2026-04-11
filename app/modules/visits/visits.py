@@ -6,8 +6,9 @@ from app.common.db import DbCollection
 from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user_or_api_key
-from app.modules.visits.visits_types import Visit, VisitRequest
+from app.modules.visits.visits_types import Visit, VisitQuery, VisitRequest
 from app.modules.visits.visits_utils import to_visit
+from app.modules.visits.query_visits import query_visits
 
 
 router = APIRouter(tags=["Visits"], prefix="/visits")
@@ -32,6 +33,23 @@ async def get_get_visits(
         collection_name=DbCollection.VISITS,
         entity_name="Visit",
     ).get_listed(mapper_fn=to_visit)
+
+
+@router.post(
+    path="/query",
+    summary="Query Visits",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response},
+)
+async def post_query_visits(
+    request: Request,
+    body: VisitQuery,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+) -> ListResponse[Visit]:
+    """
+    Query visits for the user, optionally filtered by year and/or country.
+    """
+    return await query_visits(request, user, body)
 
 
 @router.post(
