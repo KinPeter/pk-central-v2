@@ -40,6 +40,8 @@ class PkCentralEnv:
         aws_secret_access_key: str,
         aws_cognito_user_pool_id: str,
         aws_cognito_app_client_id: str,
+        steps_sync_url: str,
+        steps_sync_api_key: str,
         pk_env: str,
     ):
         self.ROOT_PATH = root_path
@@ -78,6 +80,8 @@ class PkCentralEnv:
         self.AWS_SECRET_ACCESS_KEY = aws_secret_access_key
         self.AWS_COGNITO_USER_POOL_ID = aws_cognito_user_pool_id
         self.AWS_COGNITO_APP_CLIENT_ID = aws_cognito_app_client_id
+        self.STEPS_SYNC_URL = steps_sync_url
+        self.STEPS_SYNC_API_KEY = steps_sync_api_key
         self.PK_ENV = pk_env
 
 
@@ -240,6 +244,14 @@ def load_environment() -> PkCentralEnv:
             "Missing required environment variable: AWS_COGNITO_APP_CLIENT_ID"
         )
 
+    steps_sync_url = os.getenv("STEPS_SYNC_URL")
+    if not steps_sync_url:
+        raise ValueError("Missing required environment variable: STEPS_SYNC_URL")
+
+    steps_sync_api_key = os.getenv("STEPS_SYNC_API_KEY")
+    if not steps_sync_api_key:
+        raise ValueError("Missing required environment variable: STEPS_SYNC_API_KEY")
+
     pk_env = os.getenv("PK_ENV")
     if not pk_env:
         raise ValueError("Missing required environment variable: PK_ENV")
@@ -281,5 +293,7 @@ def load_environment() -> PkCentralEnv:
         aws_secret_access_key=aws_secret_access_key,
         aws_cognito_user_pool_id=aws_cognito_user_pool_id,
         aws_cognito_app_client_id=aws_cognito_app_client_id,
+        steps_sync_url=steps_sync_url,
+        steps_sync_api_key=steps_sync_api_key,
         pk_env=pk_env,
     )

@@ -20,6 +20,8 @@ class DbCollection(str, Enum):
     REDDIT = "reddit"
     DOCUMENTS = "documents"
     API_KEYS = "api_keys"
+    STEPS = "steps"
+    STEPS_SYNC_META = "steps_sync_meta"
     # Static data collections
     AIRLINES = "airlines"
     AIRPORTS = "airports"
