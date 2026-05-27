@@ -60,6 +60,8 @@ services:
       AWS_SECRET_ACCESS_KEY: awsSecretAccessKey
       AWS_COGNITO_USER_POOL_ID: eu-central-1_userpoolid
       AWS_COGNITO_APP_CLIENT_ID: awsCognitoAppClientId
+      STEPS_SYNC_URL: https://steps-sync-api.url
+      STEPS_SYNC_API_KEY: stepsSyncApiKey
     ports:
       - "5500:5500"
     volumes:
