@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import BaseModel, Field
 from app.common.responses import OkResponse
 from app.common.types import BaseEntity, PkBaseModel
 
@@ -29,3 +29,13 @@ class GoalsRequest(PkBaseModel):
     walk_monthly_goal: int = Field(..., ge=0)
     cycling_weekly_goal: int = Field(..., ge=0)
     cycling_monthly_goal: int = Field(..., ge=0)
+
+
+class StepsItem(PkBaseModel):
+    steps: int
+    date: str
+
+
+class StepsSyncResponse(OkResponse):
+    days_synced: int
+    total_days: int

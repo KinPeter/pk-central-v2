@@ -6,16 +6,17 @@ from app.modules.activities.activities_types import (
     ActivitiesConfig,
     ChoreRequest,
     GoalsRequest,
+    StepsSyncResponse,
 )
 from app.modules.activities.get_activities import get_activities
 from app.common.responses import ResponseDocs
 from app.modules.activities.add_chore import add_chore
 from app.modules.activities.delete_chore import delete_chore
+from app.modules.activities.sync_steps import sync_steps
 from app.modules.activities.update_chore import update_chore
 from app.modules.activities.update_goals import update_goals
 from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user_or_api_key
-
 
 router = APIRouter(tags=["Activities"], prefix="/activities")
 
@@ -103,3 +104,19 @@ async def delete_delete_chore(
     Delete a cycling chore for the current user.
     """
     return await delete_chore(request, id, user)
+
+
+@router.post(
+    path="/steps/sync",
+    status_code=status.HTTP_200_OK,
+    summary="Sync steps from Samsung Health for the user",
+    responses={**ResponseDocs.unauthorized_response},
+)
+async def post_sync_steps(
+    request: Request,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+) -> StepsSyncResponse:
+    """
+    Sync steps from Samsung Health for the current user.
+    """
+    return await sync_steps(request=request, user=user)
