@@ -1,4 +1,6 @@
 import pytest
+import respx
+from httpx import Response
 
 # Parametrize cases covering all invalid auth scenarios for endpoints that
 # support both Bearer token and API key authentication.
@@ -537,3 +539,122 @@ class TestDeleteChore:
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == expected_status
+
+
+class TestSyncSteps:
+    @respx.mock
+    def test_sync_steps_success(self, client, login_user):
+        token, user_id, email = login_user
+
+        respx.get("https://steps-sync-test.example.com/exec").mock(
+            return_value=Response(
+                200,
+                json=[
+                    {"steps": 5000, "date": "2026-05-01"},
+                    {"steps": 6000, "date": "2026-05-02"},
+                    {"steps": 7000, "date": "2026-05-03"},
+                ],
+            )
+        )
+
+        response = client.post(
+            "/activities/steps/sync",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["daysSynced"] == 3
+        assert data["totalDays"] == 3
+
+        # Verify data is persisted
+        response = client.post(
+            "/activities/steps/sync",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["daysSynced"] == 0
+        assert data["totalDays"] == 3
+
+    @respx.mock
+    def test_sync_steps_incremental(self, client, login_user):
+        token, user_id, email = login_user
+
+        route = respx.get("https://steps-sync-test.example.com/exec")
+        route.side_effect = [
+            Response(
+                200,
+                json=[
+                    {"steps": 5000, "date": "2026-05-01"},
+                    {"steps": 6000, "date": "2026-05-02"},
+                ],
+            ),
+            Response(
+                200,
+                json=[
+                    {"steps": 7000, "date": "2026-05-03"},
+                ],
+            ),
+        ]
+
+        # First sync
+        response = client.post(
+            "/activities/steps/sync",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["daysSynced"] == 2
+        assert data["totalDays"] == 2
+
+        # Second sync — only the new day should be synced
+        response = client.post(
+            "/activities/steps/sync",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["daysSynced"] == 1
+        assert data["totalDays"] == 3
+
+    @respx.mock
+    def test_sync_steps_no_new_data(self, client, login_user):
+        token, user_id, email = login_user
+
+        respx.get("https://steps-sync-test.example.com/exec").mock(
+            return_value=Response(200, json=[])
+        )
+
+        response = client.post(
+            "/activities/steps/sync",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["daysSynced"] == 0
+        assert data["totalDays"] == 0
+
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_sync_steps_auth_errors(self, client, headers):
+        response = client.post("/activities/steps/sync", headers=headers)
+        assert response.status_code == 401
+
+    @respx.mock
+    def test_sync_steps_with_api_key(self, client, api_key):
+        respx.get("https://steps-sync-test.example.com/exec").mock(
+            return_value=Response(
+                200,
+                json=[
+                    {"steps": 8000, "date": "2026-05-10"},
+                ],
+            )
+        )
+
+        response = client.post(
+            "/activities/steps/sync",
+            headers={"X-PK-Api-Key": api_key},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["daysSynced"] == 1
+        assert data["totalDays"] == 1

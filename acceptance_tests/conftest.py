@@ -20,6 +20,8 @@ def set_test_env(monkeypatch):
     monkeypatch.setenv("MONGODB_URI", mongodb_test_uri)
     monkeypatch.setenv("MONGODB_NAME", mongodb_test_db)
     monkeypatch.setenv("PK_ENV", "test")
+    monkeypatch.setenv("STEPS_SYNC_URL", "https://steps-sync-test.example.com/exec")
+    monkeypatch.setenv("STEPS_SYNC_API_KEY", "test-api-key")
 
 
 @pytest.fixture(autouse=True)
