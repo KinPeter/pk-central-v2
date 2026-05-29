@@ -32,6 +32,8 @@ async def test_get_activities_success(mock_request, mock_user):
         "walk_monthly_goal": 80,
         "cycling_weekly_goal": 50,
         "cycling_monthly_goal": 200,
+        "steps_weekly_goal": 35000,
+        "steps_monthly_goal": 140000,
     }
     mock_request.app.state.db.get_collection.return_value.find_one = AsyncMock(
         return_value=data
@@ -47,6 +49,8 @@ async def test_get_activities_success(mock_request, mock_user):
     assert result.walk_monthly_goal == 80
     assert result.cycling_weekly_goal == 50
     assert result.cycling_monthly_goal == 200
+    assert result.steps_weekly_goal == 35000
+    assert result.steps_monthly_goal == 140000
 
 
 @pytest.mark.asyncio

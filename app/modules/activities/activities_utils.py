@@ -22,6 +22,8 @@ async def create_initial_activities_config(
         "walk_monthly_goal": 0,
         "cycling_weekly_goal": 0,
         "cycling_monthly_goal": 0,
+        "steps_weekly_goal": 0,
+        "steps_monthly_goal": 0,
     }
 
     collection = db.get_collection(DbCollection.ACTIVITIES)

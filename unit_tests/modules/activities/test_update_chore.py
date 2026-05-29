@@ -41,6 +41,8 @@ async def test_update_chore_success(mock_request, mock_user, mock_body):
         "walk_monthly_goal": 4000,
         "cycling_weekly_goal": 200,
         "cycling_monthly_goal": 800,
+        "steps_weekly_goal": 35000,
+        "steps_monthly_goal": 140000,
         "chores": [
             {
                 "id": "chore1",

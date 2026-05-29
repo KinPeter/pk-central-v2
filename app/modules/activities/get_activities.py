@@ -28,6 +28,8 @@ async def get_activities(request: Request, user: CurrentUser) -> ActivitiesConfi
             walk_monthly_goal=data["walk_monthly_goal"],
             cycling_weekly_goal=data["cycling_weekly_goal"],
             cycling_monthly_goal=data["cycling_monthly_goal"],
+            steps_weekly_goal=data["steps_weekly_goal"],
+            steps_monthly_goal=data["steps_monthly_goal"],
         )
 
     except NotFoundException as e:

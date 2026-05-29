@@ -37,6 +37,8 @@ async def test_update_goals_success(mock_request, mock_user, mock_body):
         "walk_monthly_goal": 4000,
         "cycling_weekly_goal": 200,
         "cycling_monthly_goal": 800,
+        "steps_weekly_goal": 35000,
+        "steps_monthly_goal": 140000,
         "chores": [],
     }
     collection = mock_request.app.state.db.get_collection.return_value
@@ -50,6 +52,8 @@ async def test_update_goals_success(mock_request, mock_user, mock_body):
     assert isinstance(result, ActivitiesConfig)
     assert result.walk_weekly_goal == 1000
     assert result.id == "cfg1"
+    assert result.steps_weekly_goal == 35000
+    assert result.steps_monthly_goal == 140000
 
 
 @pytest.mark.asyncio

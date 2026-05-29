@@ -30,6 +30,8 @@ async def test_delete_chore_success(mock_request, mock_user):
         "walk_monthly_goal": 4000,
         "cycling_weekly_goal": 200,
         "cycling_monthly_goal": 800,
+        "steps_weekly_goal": 35000,
+        "steps_monthly_goal": 140000,
         "chores": [],
     }
     collection = mock_request.app.state.db.get_collection.return_value

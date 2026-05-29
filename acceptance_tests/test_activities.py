@@ -25,6 +25,8 @@ class TestUpdateGoals:
         assert data["walkMonthlyGoal"] == 0
         assert data["cyclingWeeklyGoal"] == 0
         assert data["cyclingMonthlyGoal"] == 0
+        assert data["stepsWeeklyGoal"] == 0
+        assert data["stepsMonthlyGoal"] == 0
 
         # Updating goals
         body = {
@@ -32,6 +34,8 @@ class TestUpdateGoals:
             "walkMonthlyGoal": 4000,
             "cyclingWeeklyGoal": 200,
             "cyclingMonthlyGoal": 800,
+            "stepsWeeklyGoal": 35000,
+            "stepsMonthlyGoal": 140000,
         }
         response = client.patch(
             "/activities/goals", headers={"Authorization": f"Bearer {token}"}, json=body
@@ -43,6 +47,8 @@ class TestUpdateGoals:
         assert data["walkMonthlyGoal"] == 4000
         assert data["cyclingWeeklyGoal"] == 200
         assert data["cyclingMonthlyGoal"] == 800
+        assert data["stepsWeeklyGoal"] == 35000
+        assert data["stepsMonthlyGoal"] == 140000
         assert data["chores"] == []
 
         # Verifying the updated config
@@ -57,6 +63,8 @@ class TestUpdateGoals:
         assert data["walkMonthlyGoal"] == 4000
         assert data["cyclingWeeklyGoal"] == 200
         assert data["cyclingMonthlyGoal"] == 800
+        assert data["stepsWeeklyGoal"] == 35000
+        assert data["stepsMonthlyGoal"] == 140000
         assert data["chores"] == []
 
     @pytest.mark.parametrize(
@@ -97,6 +105,26 @@ class TestUpdateGoals:
                 },
                 422,
             ),  # Missing cyclingMonthlyGoal
+            (
+                {
+                    "walkWeeklyGoal": 1000,
+                    "walkMonthlyGoal": 4000,
+                    "cyclingWeeklyGoal": 100,
+                    "cyclingMonthlyGoal": 400,
+                    "stepsWeeklyGoal": -5000,
+                },
+                422,
+            ),  # Negative stepsWeeklyGoal
+            (
+                {
+                    "walkWeeklyGoal": 1000,
+                    "walkMonthlyGoal": 4000,
+                    "cyclingWeeklyGoal": 100,
+                    "cyclingMonthlyGoal": 400,
+                    "stepsMonthlyGoal": -20000,
+                },
+                422,
+            ),  # Negative stepsMonthlyGoal
         ],
     )
     def test_update_goals_invalid_body(self, client, login_user, body, expected_status):
@@ -125,6 +153,8 @@ class TestUpdateGoals:
             "walkMonthlyGoal": 2000,
             "cyclingWeeklyGoal": 100,
             "cyclingMonthlyGoal": 400,
+            "stepsWeeklyGoal": 35000,
+            "stepsMonthlyGoal": 140000,
         }
         response = client.patch(
             "/activities/goals",
@@ -137,6 +167,8 @@ class TestUpdateGoals:
         assert data["walkMonthlyGoal"] == 2000
         assert data["cyclingWeeklyGoal"] == 100
         assert data["cyclingMonthlyGoal"] == 400
+        assert data["stepsWeeklyGoal"] == 35000
+        assert data["stepsMonthlyGoal"] == 140000
 
     @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
     def test_get_activities_auth_errors(self, client, headers):
@@ -150,6 +182,8 @@ class TestUpdateGoals:
             "walkMonthlyGoal": 4000,
             "cyclingWeeklyGoal": 200,
             "cyclingMonthlyGoal": 800,
+            "stepsWeeklyGoal": 35000,
+            "stepsMonthlyGoal": 140000,
         }
         response = client.patch("/activities/goals", headers=headers, json=body)
         assert response.status_code == 401
@@ -381,7 +415,9 @@ class TestUpdateChore:
     def test_update_chore_auth_errors(self, client, headers):
         # Auth is checked before resource lookup, so the chore ID doesn't need to exist
         body = {"name": "Chore", "kmInterval": 50, "lastKm": 0.0}
-        response = client.put("/activities/chores/some-chore-id", headers=headers, json=body)
+        response = client.put(
+            "/activities/chores/some-chore-id", headers=headers, json=body
+        )
         assert response.status_code == 401
 
     def test_update_chore_with_api_key(self, client, api_key):

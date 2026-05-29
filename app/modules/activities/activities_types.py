@@ -16,6 +16,8 @@ class ActivitiesConfig(OkResponse, BaseEntity):
     walk_monthly_goal: int
     cycling_weekly_goal: int
     cycling_monthly_goal: int
+    steps_weekly_goal: int
+    steps_monthly_goal: int
 
 
 class ChoreRequest(PkBaseModel):
@@ -29,6 +31,8 @@ class GoalsRequest(PkBaseModel):
     walk_monthly_goal: int = Field(..., ge=0)
     cycling_weekly_goal: int = Field(..., ge=0)
     cycling_monthly_goal: int = Field(..., ge=0)
+    steps_weekly_goal: int = Field(0, ge=0)
+    steps_monthly_goal: int = Field(0, ge=0)
 
 
 class StepsItem(PkBaseModel):
