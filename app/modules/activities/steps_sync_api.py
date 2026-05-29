@@ -22,9 +22,9 @@ class StepsSyncApi:
         if to_date is not None:
             params["to"] = to_date
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(self.url, params=params)
+        async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
             try:
+                response = await client.get(self.url, params=params)
                 response.raise_for_status()
                 json = response.json()
                 return [
@@ -39,8 +39,18 @@ class StepsSyncApi:
                     detail=f"StepsSync API error: {exc.response.text}",
                 )
             except httpx.RequestError as exc:
-                self.logger.error(f"Request failed for StepsSync API {self.url}: {exc}")
+                self.logger.error(
+                    f"Request failed for StepsSync API {self.url}: {repr(exc)}"
+                )
                 raise HTTPException(
                     status_code=500,
-                    detail=f"StepsSync API request failed: {exc}",
+                    detail=f"StepsSync API request failed: {repr(exc)}",
+                )
+            except Exception as exc:
+                self.logger.error(
+                    f"Unexpected error during StepsSync API call: {repr(exc)}"
+                )
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Unexpected error during StepsSync API call: {repr(exc)}",
                 )
