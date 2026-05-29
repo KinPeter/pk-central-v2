@@ -77,6 +77,14 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
             .find({"user_id": user.id})
             .to_list(length=None)
         )
+        steps = (
+            await db.get_collection(DbCollection.STEPS)
+            .find({"user_id": user.id})
+            .to_list(length=None)
+        )
+        steps_sync_meta = await db.get_collection(
+            DbCollection.STEPS_SYNC_META
+        ).find_one({"user_id": user.id})
         aircrafts = (
             await db.get_collection(DbCollection.AIRCRAFTS).find().to_list(length=None)
         )
@@ -109,6 +117,8 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
         aircrafts = remove_ids(aircrafts)
         airlines = remove_ids(airlines)
         airports = remove_ids(airports)
+        steps = remove_ids(steps)
+        steps_sync_meta.pop("_id", None) if steps_sync_meta else {}
 
         files = [
             EmailAttachment(
@@ -170,6 +180,14 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
             EmailAttachment(
                 content=json.dumps(airports, default=str, ensure_ascii=False),
                 filename=f"airports.json",
+            ),
+            EmailAttachment(
+                content=json.dumps(steps, default=str, ensure_ascii=False),
+                filename=f"steps.json",
+            ),
+            EmailAttachment(
+                content=json.dumps(steps_sync_meta, default=str, ensure_ascii=False),
+                filename=f"steps_sync_meta.json",
             ),
         ]
 
