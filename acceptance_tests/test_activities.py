@@ -658,3 +658,241 @@ class TestSyncSteps:
         data = response.json()
         assert data["daysSynced"] == 1
         assert data["totalDays"] == 1
+
+
+class TestGetSteps:
+    def test_get_steps_default(self, client, login_user):
+        """No params — returns last 30 days with zero-fills."""
+        token, user_id, email = login_user
+
+        response = client.get(
+            "/activities/steps",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "entities" in data
+        assert len(data["entities"]) == 30
+        # All items should have steps and date fields
+        for item in data["entities"]:
+            assert "steps" in item
+            assert "date" in item
+            assert isinstance(item["steps"], int)
+        # Last item should be today
+        from datetime import date
+
+        assert data["entities"][-1]["date"] == date.today().isoformat()
+
+    def test_get_steps_with_dates(self, client, login_user):
+        """Specific date range — returns that range."""
+        token, user_id, email = login_user
+
+        response = client.get(
+            "/activities/steps?from=2026-01-01&to=2026-01-05",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 5
+        assert data["entities"][0]["date"] == "2026-01-01"
+        assert data["entities"][-1]["date"] == "2026-01-05"
+        # All items should be zero (no data in DB)
+        for item in data["entities"]:
+            assert item["steps"] == 0
+
+    def test_get_steps_with_api_key(self, client, api_key):
+        """API key auth works."""
+        response = client.get(
+            "/activities/steps",
+            headers={"X-PK-Api-Key": api_key},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "entities" in data
+        assert len(data["entities"]) == 30
+
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_get_steps_auth_errors(self, client, headers):
+        response = client.get("/activities/steps", headers=headers)
+        assert response.status_code == 401
+
+
+class TestGetSyncedSteps:
+    """Combined tests: sync steps data then verify it via get steps."""
+
+    @respx.mock
+    def test_sync_then_get_exact_range(self, client, login_user):
+        """Sync several days, then GET an exact range covering them plus gaps."""
+        from datetime import date, timedelta
+
+        token, user_id, email = login_user
+        today = date.today()
+
+        # Sync 3 specific days: today-20, today-15, today-10
+        d1 = (today - timedelta(days=20)).isoformat()
+        d2 = (today - timedelta(days=15)).isoformat()
+        d3 = (today - timedelta(days=10)).isoformat()
+        from_date = (today - timedelta(days=22)).isoformat()
+        to_date = (today - timedelta(days=8)).isoformat()
+
+        respx.get("https://steps-sync-test.example.com/exec").mock(
+            return_value=Response(
+                200,
+                json=[
+                    {"steps": 5000, "date": d1},
+                    {"steps": 8000, "date": d2},
+                    {"steps": 3000, "date": d3},
+                ],
+            )
+        )
+
+        sync_resp = client.post(
+            "/activities/steps/sync",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert sync_resp.status_code == 200
+        assert sync_resp.json()["daysSynced"] == 3
+
+        # GET the range from today-22 to today-8 (15 days: covers the 3 synced + gaps)
+        response = client.get(
+            f"/activities/steps?from={from_date}&to={to_date}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 15
+
+        # Build a dict for easy assertion
+        steps_by_date = {e["date"]: e["steps"] for e in data["entities"]}
+
+        # Synced days have their values
+        assert steps_by_date[d1] == 5000
+        assert steps_by_date[d2] == 8000
+        assert steps_by_date[d3] == 3000
+
+        # Gap days are zero-filled (pick a day between d1 and d2)
+        gap1 = (today - timedelta(days=19)).isoformat()
+        gap2 = (today - timedelta(days=14)).isoformat()
+        assert steps_by_date[gap1] == 0
+        assert steps_by_date[gap2] == 0
+
+    @respx.mock
+    def test_sync_then_get_default_range(self, client, login_user):
+        """Sync days within the last 30 days, then GET defaults to verify they appear."""
+        from datetime import date, timedelta
+
+        token, user_id, email = login_user
+        today = date.today()
+
+        d1 = (today - timedelta(days=5)).isoformat()
+        d2 = (today - timedelta(days=3)).isoformat()
+
+        respx.get("https://steps-sync-test.example.com/exec").mock(
+            return_value=Response(
+                200,
+                json=[
+                    {"steps": 7000, "date": d1},
+                    {"steps": 9000, "date": d2},
+                ],
+            )
+        )
+
+        sync_resp = client.post(
+            "/activities/steps/sync",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert sync_resp.status_code == 200
+        assert sync_resp.json()["daysSynced"] == 2
+
+        # Default GET (last 30 days) should include the synced data
+        response = client.get(
+            "/activities/steps",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 30
+        assert data["entities"][-1]["date"] == today.isoformat()
+
+        steps_by_date = {e["date"]: e["steps"] for e in data["entities"]}
+        assert steps_by_date[d1] == 7000
+        assert steps_by_date[d2] == 9000
+
+    @respx.mock
+    def test_sync_then_get_partial_range(self, client, login_user):
+        """Sync several days, then GET a sub-range that only covers some of them."""
+        from datetime import date, timedelta
+
+        token, user_id, email = login_user
+        today = date.today()
+
+        d_early = (today - timedelta(days=20)).isoformat()
+        d_mid = (today - timedelta(days=15)).isoformat()
+        d_late = (today - timedelta(days=10)).isoformat()
+
+        respx.get("https://steps-sync-test.example.com/exec").mock(
+            return_value=Response(
+                200,
+                json=[
+                    {"steps": 1000, "date": d_early},
+                    {"steps": 2000, "date": d_mid},
+                    {"steps": 3000, "date": d_late},
+                ],
+            )
+        )
+
+        sync_resp = client.post(
+            "/activities/steps/sync",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert sync_resp.status_code == 200
+        assert sync_resp.json()["daysSynced"] == 3
+
+        # GET only the middle part of the range — only d_mid should appear
+        sub_from = (today - timedelta(days=17)).isoformat()
+        sub_to = (today - timedelta(days=13)).isoformat()
+        response = client.get(
+            f"/activities/steps?from={sub_from}&to={sub_to}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 5
+
+        steps_by_date = {e["date"]: e["steps"] for e in data["entities"]}
+        assert steps_by_date.get(d_mid) == 2000
+        assert d_early not in steps_by_date
+        assert d_late not in steps_by_date
+
+    @respx.mock
+    def test_get_steps_with_synced_data_uses_api_key(self, client, api_key):
+        """API key auth works for the combined sync-then-get flow."""
+        from datetime import date, timedelta
+
+        today = date.today()
+        d = (today - timedelta(days=7)).isoformat()
+
+        respx.get("https://steps-sync-test.example.com/exec").mock(
+            return_value=Response(
+                200,
+                json=[{"steps": 6000, "date": d}],
+            )
+        )
+
+        sync_resp = client.post(
+            "/activities/steps/sync",
+            headers={"X-PK-Api-Key": api_key},
+        )
+        assert sync_resp.status_code == 200
+        assert sync_resp.json()["daysSynced"] == 1
+
+        response = client.get(
+            "/activities/steps",
+            headers={"X-PK-Api-Key": api_key},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 30
+
+        steps_by_date = {e["date"]: e["steps"] for e in data["entities"]}
+        assert steps_by_date[d] == 6000

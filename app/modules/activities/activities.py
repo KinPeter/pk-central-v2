@@ -1,15 +1,17 @@
 from typing_extensions import Annotated
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Query, Request, status
 from fastapi.params import Depends
 
+from app.common.responses import ListResponse, ResponseDocs
 from app.modules.activities.activities_types import (
     ActivitiesConfig,
     ChoreRequest,
     GoalsRequest,
+    StepsItem,
     StepsSyncResponse,
 )
 from app.modules.activities.get_activities import get_activities
-from app.common.responses import ResponseDocs
+from app.modules.activities.get_steps import get_steps
 from app.modules.activities.add_chore import add_chore
 from app.modules.activities.delete_chore import delete_chore
 from app.modules.activities.sync_steps import sync_steps
@@ -120,3 +122,22 @@ async def post_sync_steps(
     Sync steps from Samsung Health for the current user.
     """
     return await sync_steps(request=request, user=user)
+
+
+@router.get(
+    path="/steps",
+    summary="Get Steps for User",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response},
+)
+async def get_get_steps(
+    request: Request,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+    from_date: str | None = Query(None, alias="from"),
+    to_date: str | None = Query(None, alias="to"),
+) -> ListResponse[StepsItem]:
+    """
+    Get steps for the current user within an optional date range.
+    Days without steps data are filled with a steps count of 0.
+    """
+    return await get_steps(request, user, from_date, to_date)
