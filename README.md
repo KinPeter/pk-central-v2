@@ -4,7 +4,22 @@ A collection of API endpoints to support multiple hobby projects powered by Pyth
 
 ## Features
 
-- **Feature** Important feature TBA
+- **Authentication** — Multi-method auth: login code (email), password, SSO (AWS Cognito), and API key support with JWT token refresh
+- **Activities & Goals** — Cycling chore tracking with goals, plus Samsung Health step sync
+- **Birthdays** — Birthday record management
+- **Dashboard Settings** — Per-user start page / dashboard configuration
+- **Documents** — Rich document storage with content
+- **Flights** — Flight logging with planned/past filtering and custom querying
+- **Notes** — Personal note management
+- **Personal Data** — Flexible key-value personal data records
+- **Proxy APIs** — Translation via DeepL and reverse geocoding via LocationIQ
+- **Reddit Feed** — Configurable Reddit post aggregation from subreddits and users
+- **Shortcuts** — User shortcut management
+- **Strava Integration** — Sync Strava activities and generate route map coordinates
+- **Trips & Travel** — Trip statistics and map data (public or authenticated), plus airport/airline/aircraft lookup
+- **Visits** — Visit logging with year/country filtering
+- **Data Backup** — One-click email export of user data
+- **AI Ready** — Google Gemini SDK integration available for future AI-powered features
 
 ## Technologies used
 
@@ -18,6 +33,8 @@ A collection of API endpoints to support multiple hobby projects powered by Pyth
 ## 3rd party APIs and SDKs
 
 - Google Gemini GenAI SDK
+- Google Apps Script API
+- AWS Cognito SDK (Boto3)
 - Reddit SDK (AsyncPraw)
 - Strava API
 - DeepL API
