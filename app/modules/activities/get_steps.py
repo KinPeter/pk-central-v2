@@ -25,9 +25,10 @@ async def get_steps(
 
     try:
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        yesterday = subtract_days(today, 1)
 
         if to_date is None:
-            to_date = today
+            to_date = yesterday
 
         if from_date is None:
             from_date = subtract_days(to_date, 29)

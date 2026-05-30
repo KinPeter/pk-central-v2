@@ -32,9 +32,11 @@ def _make_cursor(docs: list[dict]) -> AsyncMock:
 class TestGetSteps:
     @pytest.mark.asyncio
     async def test_get_steps_default_range(self, mock_request, mock_user):
-        """No params given — returns last 30 days with mixed DB data and zero-fills."""
+        """No params given — returns last 30 days up to yesterday with mixed DB data and zero-fills."""
         collection = mock_request.app.state.db.get_collection.return_value
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime(
+            "%Y-%m-%d"
+        )
 
         # Provide a couple of step records within the 30-day window
         mid_date = (datetime.now(timezone.utc) - timedelta(days=15)).strftime(
@@ -42,7 +44,7 @@ class TestGetSteps:
         )
         collection.find.return_value = _make_cursor(
             [
-                {"user_id": mock_user.id, "steps": 5000, "date": today},
+                {"user_id": mock_user.id, "steps": 5000, "date": yesterday},
                 {
                     "user_id": mock_user.id,
                     "steps": 3000,
@@ -55,9 +57,9 @@ class TestGetSteps:
 
         assert isinstance(result, ListResponse)
         assert len(result.entities) == 30
-        # The last entity should be today with 5000 steps
+        # The last entity should be yesterday with 5000 steps
         assert result.entities[-1].steps == 5000
-        assert result.entities[-1].date == today
+        assert result.entities[-1].date == yesterday
         # A day without data should have 0 steps
         assert result.entities[0].steps == 0
 
@@ -100,7 +102,9 @@ class TestGetSteps:
         collection = mock_request.app.state.db.get_collection.return_value
         collection.find.return_value = _make_cursor([])
 
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime(
+            "%Y-%m-%d"
+        )
 
         result = await get_steps(mock_request, mock_user, None, None)
 
@@ -109,8 +113,8 @@ class TestGetSteps:
         # All entries should have 0 steps
         for item in result.entities:
             assert item.steps == 0
-        # Last date should be today
-        assert result.entities[-1].date == today
+        # Last date should be yesterday
+        assert result.entities[-1].date == yesterday
 
     @pytest.mark.asyncio
     async def test_get_steps_internal_error(self, mock_request, mock_user):

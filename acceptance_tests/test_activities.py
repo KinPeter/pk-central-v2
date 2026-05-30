@@ -662,7 +662,7 @@ class TestSyncSteps:
 
 class TestGetSteps:
     def test_get_steps_default(self, client, login_user):
-        """No params — returns last 30 days with zero-fills."""
+        """No params — returns last 30 days up to yesterday with zero-fills."""
         token, user_id, email = login_user
 
         response = client.get(
@@ -678,10 +678,10 @@ class TestGetSteps:
             assert "steps" in item
             assert "date" in item
             assert isinstance(item["steps"], int)
-        # Last item should be today
-        from datetime import date
+        # Last item should be yesterday
+        from datetime import date, timedelta
 
-        assert data["entities"][-1]["date"] == date.today().isoformat()
+        assert data["entities"][-1]["date"] == (date.today() - timedelta(days=1)).isoformat()
 
     def test_get_steps_with_dates(self, client, login_user):
         """Specific date range — returns that range."""
@@ -804,7 +804,7 @@ class TestGetSyncedSteps:
         assert sync_resp.status_code == 200
         assert sync_resp.json()["daysSynced"] == 2
 
-        # Default GET (last 30 days) should include the synced data
+        # Default GET (last 30 days up to yesterday) should include the synced data
         response = client.get(
             "/activities/steps",
             headers={"Authorization": f"Bearer {token}"},
@@ -812,7 +812,7 @@ class TestGetSyncedSteps:
         assert response.status_code == 200
         data = response.json()
         assert len(data["entities"]) == 30
-        assert data["entities"][-1]["date"] == today.isoformat()
+        assert data["entities"][-1]["date"] == (today - timedelta(days=1)).isoformat()
 
         steps_by_date = {e["date"]: e["steps"] for e in data["entities"]}
         assert steps_by_date[d1] == 7000
