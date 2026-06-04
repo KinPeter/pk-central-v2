@@ -678,12 +678,12 @@ class TestGetSteps:
             assert "steps" in item
             assert "date" in item
             assert isinstance(item["steps"], int)
-        # Last item should be yesterday
-        from datetime import date, timedelta
+        # Last item should be yesterday (using UTC to match API behavior)
+        from datetime import datetime, timezone, timedelta
 
         assert (
             data["entities"][-1]["date"]
-            == (date.today() - timedelta(days=1)).isoformat()
+            == (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
         )
 
     def test_get_steps_with_dates(self, client, login_user):
@@ -726,10 +726,10 @@ class TestGetSyncedSteps:
     @respx.mock
     def test_sync_then_get_exact_range(self, client, login_user):
         """Sync several days, then GET an exact range covering them plus gaps."""
-        from datetime import date, timedelta
+        from datetime import datetime, timezone, timedelta
 
         token, user_id, email = login_user
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
 
         # Sync 3 specific days: today-20, today-15, today-10
         d1 = (today - timedelta(days=20)).isoformat()
@@ -782,10 +782,10 @@ class TestGetSyncedSteps:
     @respx.mock
     def test_sync_then_get_default_range(self, client, login_user):
         """Sync days within the last 30 days, then GET defaults to verify they appear."""
-        from datetime import date, timedelta
+        from datetime import datetime, timezone, timedelta
 
         token, user_id, email = login_user
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
 
         d1 = (today - timedelta(days=5)).isoformat()
         d2 = (today - timedelta(days=3)).isoformat()
@@ -824,10 +824,10 @@ class TestGetSyncedSteps:
     @respx.mock
     def test_sync_then_get_partial_range(self, client, login_user):
         """Sync several days, then GET a sub-range that only covers some of them."""
-        from datetime import date, timedelta
+        from datetime import datetime, timezone, timedelta
 
         token, user_id, email = login_user
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
 
         d_early = (today - timedelta(days=20)).isoformat()
         d_mid = (today - timedelta(days=15)).isoformat()
@@ -870,9 +870,9 @@ class TestGetSyncedSteps:
     @respx.mock
     def test_get_steps_with_synced_data_uses_api_key(self, client, api_key):
         """API key auth works for the combined sync-then-get flow."""
-        from datetime import date, timedelta
+        from datetime import datetime, timezone, timedelta
 
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
         d = (today - timedelta(days=7)).isoformat()
 
         respx.get("https://steps-sync-test.example.com/exec").mock(
