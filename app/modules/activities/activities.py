@@ -1,14 +1,16 @@
 from typing_extensions import Annotated
-from fastapi import APIRouter, Query, Request, status
+from fastapi import APIRouter, File, Form, Query, Request, UploadFile, status
 from fastapi.params import Depends
 
-from app.common.responses import ListResponse, ResponseDocs
+from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.activities.activities_types import (
     ActivitiesConfig,
     ChoreRequest,
     GoalsRequest,
     StepsItem,
     StepsSyncResponse,
+    VerifyActivitySyncRequest,
+    VerifyActivitySyncResponse,
 )
 from app.modules.activities.get_activities_config import get_activities_config
 from app.modules.activities.get_steps import get_steps
@@ -17,6 +19,8 @@ from app.modules.activities.delete_chore import delete_chore
 from app.modules.activities.sync_steps import sync_steps
 from app.modules.activities.update_chore import update_chore
 from app.modules.activities.update_goals import update_goals
+from app.modules.activities.upload_activity import upload_activity
+from app.modules.activities.verify_activity_sync import verify_activity_sync
 from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user_or_api_key
 
@@ -37,6 +41,41 @@ async def get_get_activities(
     Get the Activities config for the user.
     """
     return await get_activities_config(request, user)
+
+
+@router.post(
+    path="/verify-sync",
+    summary="Verify Steps Sync",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response},
+)
+async def post_verify_activity_sync(
+    request: Request,
+    body: VerifyActivitySyncRequest,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+) -> VerifyActivitySyncResponse:
+    """
+    Verify if the Strava activity IDs are already synced for the user.
+    """
+    return await verify_activity_sync(request, body, user)
+
+
+@router.post(
+    path="/upload",
+    summary="Upload Activity",
+    status_code=status.HTTP_201_CREATED,
+    responses={**ResponseDocs.unauthorized_response},
+)
+async def post_upload_activity(
+    request: Request,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+    gpx_file: Annotated[UploadFile, File(...)],
+    source_id: Annotated[str, Form(...)],
+) -> IdResponse:
+    """
+    Upload an activity by parsing data from the GPX file
+    """
+    return await upload_activity(request, user, gpx_file, source_id)
 
 
 @router.get(

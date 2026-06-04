@@ -48,6 +48,12 @@ class BaseErrorResponse(HTTPException):
         super().__init__(status_code=status_code, detail=detail)
 
 
+class BadRequestException(BaseErrorResponse):
+    def __init__(self, detail: str | None = None):
+        detail = f"Bad Request: {detail}" if detail else "Bad Request"
+        super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
+
 class UnauthorizedException(BaseErrorResponse):
     def __init__(self, reason: str | None = None):
         detail = f"Unauthorized: {reason}" if reason else "Unauthorized"
@@ -70,6 +76,14 @@ class ConflictException(BaseErrorResponse):
     def __init__(self, detail: str | None = None):
         detail = f"Conflict: {detail}" if detail else "Conflict"
         super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
+
+
+class UnprocessableEntityException(BaseErrorResponse):
+    def __init__(self, detail: str | None = None):
+        detail = f"Unprocessable Entity: {detail}" if detail else "Unprocessable Entity"
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail
+        )
 
 
 class InternalServerErrorException(BaseErrorResponse):

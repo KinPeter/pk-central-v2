@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from enum import Enum
+
+from pydantic import Field
 from app.common.responses import OkResponse
 from app.common.types import BaseEntity, PkBaseModel
 
@@ -43,3 +45,38 @@ class StepsItem(PkBaseModel):
 class StepsSyncResponse(OkResponse):
     days_synced: int
     total_days: int
+
+
+class VerifyActivitySyncRequest(PkBaseModel):
+    activity_ids: list[str] = Field(default_factory=list)
+
+
+class VerifyActivitySyncResponse(OkResponse):
+    unsynced: list[str] = Field(default_factory=list)
+
+
+class ActivityType(str, Enum):
+    WALK = "walk"
+    RIDE = "ride"
+    BOATING = "boating"
+
+
+class ActivityData(PkBaseModel):
+    type: ActivityType
+    source_id: str
+    name: str
+    start_date: str
+    moving_time: int  # sec
+    elapsed_time: int  # sec
+    distance: float  # meters
+    total_elevation_gain: float  # meters
+    average_speed: float  # m/s
+    max_speed: float  # m/s
+    average_heartrate: float | None  # bpm
+    max_heartrate: float | None  # bpm
+    average_cadence: float | None  # rpm
+    max_cadence: float | None  # rpm
+
+
+class Activity(BaseEntity, ActivityData):
+    pass
