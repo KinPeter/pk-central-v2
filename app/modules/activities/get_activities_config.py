@@ -6,7 +6,9 @@ from app.modules.activities.activities_types import ActivitiesConfig
 from app.modules.auth.auth_types import CurrentUser
 
 
-async def get_activities(request: Request, user: CurrentUser) -> ActivitiesConfig:
+async def get_activities_config(
+    request: Request, user: CurrentUser
+) -> ActivitiesConfig:
     """
     Get the Activities config for the user.
     """
@@ -14,7 +16,7 @@ async def get_activities(request: Request, user: CurrentUser) -> ActivitiesConfi
     logger = request.app.state.logger
 
     try:
-        collection = db.get_collection(DbCollection.ACTIVITIES)
+        collection = db.get_collection(DbCollection.ACTIVITIES_CONFIG)
         data = await collection.find_one({"user_id": user.id})
 
         if not data:

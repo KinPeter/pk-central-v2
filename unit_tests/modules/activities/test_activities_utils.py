@@ -29,7 +29,7 @@ class TestCreateInitialActivitiesConfig:
 
         await create_initial_activities_config(db, logger, user_id)
 
-        db.get_collection.assert_any_call("activities")
+        db.get_collection.assert_any_call("activities_config")
         collection.find_one.assert_awaited_with({"user_id": user_id})
         assert collection.insert_one.await_count == 1
         logger.info.assert_called()
@@ -45,7 +45,7 @@ class TestCreateInitialActivitiesConfig:
         with pytest.raises(ValueError):
             await create_initial_activities_config(db, logger, user_id)
 
-        db.get_collection.assert_any_call("activities")
+        db.get_collection.assert_any_call("activities_config")
         collection.find_one.assert_awaited_with({"user_id": user_id})
         logger.warning.assert_called()
         collection.insert_one.assert_not_awaited()

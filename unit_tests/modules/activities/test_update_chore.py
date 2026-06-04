@@ -57,7 +57,7 @@ async def test_update_chore_success(mock_request, mock_user, mock_body):
     collection.find_one = AsyncMock(return_value=updated_data)
 
     result = await update_chore(mock_request, "chore1", mock_body, mock_user)
-    mock_request.app.state.db.get_collection.assert_called_with("activities")
+    mock_request.app.state.db.get_collection.assert_called_with("activities_config")
     collection.update_one.assert_called_once()
     collection.find_one.assert_called_once_with({"user_id": mock_user.id})
     assert isinstance(result, ActivitiesConfig)

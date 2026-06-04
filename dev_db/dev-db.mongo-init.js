@@ -13,6 +13,8 @@ db = db.getSiblingDB("central-v2");
 
 db.createCollection("users");
 db.createCollection("activities");
+db.createCollection("activities_sync_meta");
+db.createCollection("activities_config");
 db.createCollection("start_settings");
 db.createCollection("shortcuts");
 db.createCollection("notes");

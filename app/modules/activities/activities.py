@@ -10,7 +10,7 @@ from app.modules.activities.activities_types import (
     StepsItem,
     StepsSyncResponse,
 )
-from app.modules.activities.get_activities import get_activities
+from app.modules.activities.get_activities_config import get_activities_config
 from app.modules.activities.get_steps import get_steps
 from app.modules.activities.add_chore import add_chore
 from app.modules.activities.delete_chore import delete_chore
@@ -25,7 +25,7 @@ router = APIRouter(tags=["Activities"], prefix="/activities")
 
 @router.get(
     path="/",
-    summary="Get Activities Config",
+    summary="[DEPRECATED] Get Activities Config",
     status_code=status.HTTP_200_OK,
     responses={**ResponseDocs.unauthorized_response, **ResponseDocs.not_found_response},
 )
@@ -36,7 +36,23 @@ async def get_get_activities(
     """
     Get the Activities config for the user.
     """
-    return await get_activities(request, user)
+    return await get_activities_config(request, user)
+
+
+@router.get(
+    path="/config",
+    summary="Get Activities Config",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response, **ResponseDocs.not_found_response},
+)
+async def get_get_activities_config(
+    request: Request,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+) -> ActivitiesConfig:
+    """
+    Get the Activities config for the user.
+    """
+    return await get_activities_config(request, user)
 
 
 @router.patch(

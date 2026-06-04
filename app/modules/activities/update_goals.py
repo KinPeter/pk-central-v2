@@ -16,7 +16,7 @@ async def update_goals(
     logger = request.app.state.logger
 
     try:
-        collection = db.get_collection(DbCollection.ACTIVITIES)
+        collection = db.get_collection(DbCollection.ACTIVITIES_CONFIG)
         result = await collection.update_one(
             {"user_id": user.id},
             {

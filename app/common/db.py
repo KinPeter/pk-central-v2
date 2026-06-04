@@ -14,6 +14,8 @@ class DbCollection(str, Enum):
     NOTES = "notes"
     PERSONAL_DATA = "personal_data"
     ACTIVITIES = "activities"
+    ACTIVITIES_CONFIG = "activities_config"
+    ACTIVITIES_SYNC_META = "activities_sync_meta"
     BIRTHDAYS = "birthdays"
     FLIGHTS = "flights"
     VISITS = "visits"

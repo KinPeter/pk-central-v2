@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from app.common.responses import NotFoundException, InternalServerErrorException
 from app.modules.activities.activities_types import ActivitiesConfig
-from app.modules.activities.get_activities import get_activities
+from app.modules.activities.get_activities_config import get_activities_config
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ async def test_get_activities_success(mock_request, mock_user):
     mock_request.app.state.db.get_collection.return_value.find_one = AsyncMock(
         return_value=data
     )
-    result = await get_activities(mock_request, mock_user)
+    result = await get_activities_config(mock_request, mock_user)
     assert isinstance(result, ActivitiesConfig)
     assert result.id == "cfg1"
     assert result.chores[0].id == "chore1"
@@ -59,7 +59,7 @@ async def test_get_activities_not_found(mock_request, mock_user):
         return_value=None
     )
     with pytest.raises(NotFoundException):
-        await get_activities(mock_request, mock_user)
+        await get_activities_config(mock_request, mock_user)
     mock_request.app.state.logger.error.assert_called_with(
         f"Activities config not found for user {mock_user.id}"
     )
@@ -71,7 +71,7 @@ async def test_get_activities_internal_error(mock_request, mock_user):
         side_effect=Exception("db error")
     )
     with pytest.raises(InternalServerErrorException):
-        await get_activities(mock_request, mock_user)
+        await get_activities_config(mock_request, mock_user)
     mock_request.app.state.logger.error.assert_any_call(
         f"Error retrieving Activities config for user {mock_user.id}: db error"
     )

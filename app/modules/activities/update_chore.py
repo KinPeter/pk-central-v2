@@ -16,7 +16,7 @@ async def update_chore(
     logger = request.app.state.logger
 
     try:
-        collection = db.get_collection(DbCollection.ACTIVITIES)
+        collection = db.get_collection(DbCollection.ACTIVITIES_CONFIG)
         chore_data = body.model_dump(exclude_none=True, exclude_unset=True, mode="json")
         chore_data["id"] = id
 

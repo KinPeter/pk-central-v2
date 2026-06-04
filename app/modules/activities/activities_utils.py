@@ -12,7 +12,7 @@ async def create_initial_activities_config(
     """
     Create an initial Activities config config for the user.
     """
-    collection = db.get_collection(DbCollection.ACTIVITIES)
+    collection = db.get_collection(DbCollection.ACTIVITIES_CONFIG)
 
     data = {
         "id": str(uuid.uuid4()),
@@ -26,7 +26,7 @@ async def create_initial_activities_config(
         "steps_monthly_goal": 0,
     }
 
-    collection = db.get_collection(DbCollection.ACTIVITIES)
+    collection = db.get_collection(DbCollection.ACTIVITIES_CONFIG)
     existing_config = await collection.find_one({"user_id": user_id})
     if existing_config:
         logger.warning(f"Activities config already exists for user {user_id}")

@@ -17,7 +17,7 @@ class TestUpdateGoals:
 
         # Getting initial config
         response = client.get(
-            "/activities",
+            "/activities/config",
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 200
@@ -55,7 +55,7 @@ class TestUpdateGoals:
 
         # Verifying the updated config
         response = client.get(
-            "/activities",
+            "/activities/config",
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 200
@@ -142,7 +142,7 @@ class TestUpdateGoals:
 
     def test_get_activities_with_api_key(self, client, api_key):
         response = client.get(
-            "/activities",
+            "/activities/config",
             headers={"X-PK-Api-Key": api_key},
         )
         assert response.status_code == 200
@@ -174,7 +174,7 @@ class TestUpdateGoals:
 
     @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
     def test_get_activities_auth_errors(self, client, headers):
-        response = client.get("/activities", headers=headers)
+        response = client.get("/activities/config", headers=headers)
         assert response.status_code == 401
 
     @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
@@ -197,7 +197,7 @@ class TestAddChore:
 
         # Getting initial config
         response = client.get(
-            "/activities",
+            "/activities/config",
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 200
@@ -227,7 +227,7 @@ class TestAddChore:
 
         # Verifying the updated config
         response = client.get(
-            "/activities",
+            "/activities/config",
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 200
@@ -487,7 +487,7 @@ class TestDeleteChore:
 
         # Verifying the chore is deleted
         response = client.get(
-            "/activities",
+            "/activities/config",
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 200
@@ -681,7 +681,10 @@ class TestGetSteps:
         # Last item should be yesterday
         from datetime import date, timedelta
 
-        assert data["entities"][-1]["date"] == (date.today() - timedelta(days=1)).isoformat()
+        assert (
+            data["entities"][-1]["date"]
+            == (date.today() - timedelta(days=1)).isoformat()
+        )
 
     def test_get_steps_with_dates(self, client, login_user):
         """Specific date range — returns that range."""
