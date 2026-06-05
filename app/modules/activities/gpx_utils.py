@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from math import asin, cos, radians, sin, sqrt
+from itertools import pairwise
+from math import atan2, cos, radians, sin, sqrt
 from xml.etree import ElementTree as ET
 
 from app.modules.activities.activities_types import ActivityData, ActivityType
@@ -81,7 +82,7 @@ def parse_strava_gpx(gpx_content: str, source_id: str) -> ActivityData:
     # Ensure chronological order
     track_points.sort(key=lambda point: point.timestamp)
 
-    start_date = _format_timestamp(track_points[0].timestamp)
+    start_date = track_points[0].timestamp.isoformat()
     elapsed_time = int(
         (track_points[-1].timestamp - track_points[0].timestamp).total_seconds()
     )
@@ -90,7 +91,7 @@ def parse_strava_gpx(gpx_content: str, source_id: str) -> ActivityData:
     heartrate_values = [
         point.heartrate for point in track_points if point.heartrate is not None
     ]
-    average_heartrate, max_heartrate = _compute_heartrate_stats(heartrate_values)
+    average_heartrate, max_heartrate = _compute_avg_and_max(heartrate_values)
 
     # Cadence stats — exclude 0 (stopped, not pedalling) but include all
     # non-zero values regardless of movement state
@@ -99,19 +100,19 @@ def parse_strava_gpx(gpx_content: str, source_id: str) -> ActivityData:
         for point in track_points
         if point.cadence is not None and point.cadence > 0
     ]
-    average_cadence, max_cadence = _compute_cadence_stats(cadence_values)
+    average_cadence, max_cadence = _compute_avg_and_max(cadence_values)
 
     # Thresholds depend on activity type
     if activity_type == ActivityType.WALK:
         min_distance_threshold = MOVEMENT_DISTANCE_THRESHOLD_WALK_M
-        max_speed_window = MAX_SPEED_WINDOW_WALK_S
+        window_seconds = MAX_SPEED_WINDOW_WALK_S
     else:
         min_distance_threshold = MOVEMENT_DISTANCE_THRESHOLD_ELSE_M
-        max_speed_window = MAX_SPEED_WINDOW_ELSE_S
+        window_seconds = MAX_SPEED_WINDOW_ELSE_S
 
     # --- Movement metrics (per-segment pass) ---
     total_distance = 0.0
-    moving_time = 0
+    moving_time: float = 0.0
     total_elevation_gain = 0.0
 
     # Track cumulative time and distance through *moving* segments for the
@@ -119,10 +120,7 @@ def parse_strava_gpx(gpx_content: str, source_id: str) -> ActivityData:
     cumulative_times: list[float] = [0.0]
     cumulative_distances: list[float] = [0.0]
 
-    for i in range(len(track_points) - 1):
-        first = track_points[i]
-        second = track_points[i + 1]
-
+    for first, second in pairwise(track_points):
         time_delta = (second.timestamp - first.timestamp).total_seconds()
         if time_delta <= 0:
             continue
@@ -139,7 +137,7 @@ def parse_strava_gpx(gpx_content: str, source_id: str) -> ActivityData:
             continue
 
         # Accumulate moving time (all segments that pass the filters above)
-        moving_time += int(time_delta)
+        moving_time += time_delta
 
         # GPS drift while stationary — time counts but distance doesn't
         if distance < min_distance_threshold:
@@ -159,7 +157,7 @@ def parse_strava_gpx(gpx_content: str, source_id: str) -> ActivityData:
 
     # --- Max speed (sliding window) ---
     max_speed = _compute_max_speed_sliding_window(
-        cumulative_times, cumulative_distances, max_speed_window
+        cumulative_times, cumulative_distances, window_seconds
     )
 
     average_speed = total_distance / moving_time if moving_time > 0 else 0.0
@@ -169,7 +167,7 @@ def parse_strava_gpx(gpx_content: str, source_id: str) -> ActivityData:
         source_id=source_id,
         name=name,
         start_date=start_date,
-        moving_time=moving_time,
+        moving_time=int(moving_time),
         elapsed_time=elapsed_time,
         distance=round(total_distance, 2),
         total_elevation_gain=round(total_elevation_gain, 2),
@@ -224,7 +222,11 @@ def _extract_name(root: ET.Element) -> str:
 
 
 def _map_activity_type(root: ET.Element) -> ActivityType:
-    """Map the GPX <trk><type> string to an ActivityType enum value."""
+    """Map the GPX <trk><type> string to an ActivityType enum value.
+
+    Raises:
+        ValueError: If the type is missing or not recognised.
+    """
     type_element = root.find(f".//{{{GPX_NS}}}trk/{{{GPX_NS}}}type")
     gpx_type = (
         type_element.text.strip().lower()
@@ -232,12 +234,14 @@ def _map_activity_type(root: ET.Element) -> ActivityType:
         else ""
     )
 
-    if gpx_type == "walking":
+    if gpx_type in {"walk", "walking", "hike", "hiking"}:
         return ActivityType.WALK
-    if gpx_type == "cycling":
+    if gpx_type in {"cycling", "ride", "bike ride", "mountain biking", "mtb"}:
         return ActivityType.RIDE
-    # Everything else (Sailing, Sail, boating, unknown) → BOATING
-    return ActivityType.BOATING
+    if gpx_type in {"sail", "sailing", "boat", "boating", "boat ride"}:
+        return ActivityType.BOATING
+
+    raise ValueError(f"Unrecognised activity type: '{gpx_type or '<missing>'}' ")
 
 
 def _parse_optional_float(parent: ET.Element, tag: str) -> float | None:
@@ -263,11 +267,6 @@ def _parse_timestamp(parent: ET.Element, tag: str) -> datetime:
         cleaned = element.text.strip().replace("Z", "+00:00")
         return datetime.fromisoformat(cleaned)
     return datetime.min.replace(tzinfo=timezone.utc)
-
-
-def _format_timestamp(dt: datetime) -> str:
-    """Format a datetime as an ISO 8601 string."""
-    return dt.isoformat()
 
 
 def _parse_extension_int(parent: ET.Element, tag: str) -> int | None:
@@ -305,7 +304,7 @@ def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         sin(delta_lat / 2) ** 2
         + cos(lat1_rad) * cos(lat2_rad) * sin(delta_lon / 2) ** 2
     )
-    c = 2 * asin(sqrt(a))
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
     return earth_radius_m * c
 
@@ -355,19 +354,10 @@ def _compute_max_speed_sliding_window(
 # ---------------------------------------------------------------------------
 
 
-def _compute_heartrate_stats(
+def _compute_avg_and_max(
     values: list[int],
 ) -> tuple[float | None, float | None]:
-    """Return (average, max) heartrate, or (None, None) if no data."""
-    if not values:
-        return None, None
-    return round(sum(values) / len(values), 1), float(max(values))
-
-
-def _compute_cadence_stats(
-    values: list[int],
-) -> tuple[float | None, float | None]:
-    """Return (average, max) cadence, or (None, None) if no data."""
+    """Return (average, max) for a list of ints, or (None, None) if empty."""
     if not values:
         return None, None
     return round(sum(values) / len(values), 1), float(max(values))

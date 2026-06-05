@@ -7,12 +7,10 @@ import pytest
 
 from app.modules.activities.activities_types import ActivityType
 from app.modules.activities.gpx_utils import (
-    _compute_cadence_stats,
-    _compute_heartrate_stats,
+    _compute_avg_and_max,
     _compute_max_speed_sliding_window,
     _extract_name,
     _extract_track_points,
-    _format_timestamp,
     _haversine,
     _map_activity_type,
     _parse_extension_int,
@@ -186,12 +184,6 @@ class TestParseTimestamp:
         assert result == datetime.min.replace(tzinfo=timezone.utc)
 
 
-class TestFormatTimestamp:
-    def test_format_utc(self):
-        dt = datetime(2024, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
-        assert _format_timestamp(dt) == "2024-06-01T12:00:00+00:00"
-
-
 class TestParseExtensionInt:
     def test_hr_present(self):
         xml = """<trkpt lat="0" lon="0">
@@ -298,20 +290,21 @@ class TestMapActivityType:
         root = ET.fromstring(xml)
         assert _map_activity_type(root) == ActivityType.BOATING
 
-    def test_unknown_type_falls_to_boating(self):
+    def test_unknown_type_raises(self):
         xml = """<gpx xmlns="http://www.topografix.com/GPX/1/1">
           <trk><type>running</type></trk>
         </gpx>"""
         root = ET.fromstring(xml)
-        # Unrecognized types default to BOATING
-        assert _map_activity_type(root) == ActivityType.BOATING
+        with pytest.raises(ValueError, match="Unrecognised activity type"):
+            _map_activity_type(root)
 
-    def test_missing_type(self):
+    def test_missing_type_raises(self):
         xml = """<gpx xmlns="http://www.topografix.com/GPX/1/1">
           <trk></trk>
         </gpx>"""
         root = ET.fromstring(xml)
-        assert _map_activity_type(root) == ActivityType.BOATING
+        with pytest.raises(ValueError, match="Unrecognised activity type"):
+            _map_activity_type(root)
 
     def test_case_insensitive(self):
         xml = """<gpx xmlns="http://www.topografix.com/GPX/1/1">
@@ -319,40 +312,49 @@ class TestMapActivityType:
         </gpx>"""
         root = ET.fromstring(xml)
         assert _map_activity_type(root) == ActivityType.WALK
+    def test_walk_variant(self):
+        xml = """<gpx xmlns="http://www.topografix.com/GPX/1/1">
+          <trk><type>walk</type></trk>
+        </gpx>"""
+        root = ET.fromstring(xml)
+        assert _map_activity_type(root) == ActivityType.WALK
 
+    def test_ride_variants(self):
+        xml = """<gpx xmlns="http://www.topografix.com/GPX/1/1">
+          <trk><type>bike ride</type></trk>
+        </gpx>"""
+        root = ET.fromstring(xml)
+        assert _map_activity_type(root) == ActivityType.RIDE
 
-class TestComputeHeartrateStats:
+    def test_mtb_variant(self):
+        xml = """<gpx xmlns="http://www.topografix.com/GPX/1/1">
+          <trk><type>MTB</type></trk>
+        </gpx>"""
+        root = ET.fromstring(xml)
+        assert _map_activity_type(root) == ActivityType.RIDE
+
+    def test_boating_variants(self):
+        xml = """<gpx xmlns="http://www.topografix.com/GPX/1/1">
+          <trk><type>boat ride</type></trk>
+        </gpx>"""
+        root = ET.fromstring(xml)
+        assert _map_activity_type(root) == ActivityType.BOATING
+
+class TestComputeAvgAndMax:
     def test_with_values(self):
-        avg, mx = _compute_heartrate_stats([120, 130, 140])
+        avg, mx = _compute_avg_and_max([120, 130, 140])
         assert avg == 130.0
         assert mx == 140.0
 
     def test_empty(self):
-        avg, mx = _compute_heartrate_stats([])
+        avg, mx = _compute_avg_and_max([])
         assert avg is None
         assert mx is None
 
     def test_single_value(self):
-        avg, mx = _compute_heartrate_stats([150])
+        avg, mx = _compute_avg_and_max([150])
         assert avg == 150.0
         assert mx == 150.0
-
-
-class TestComputeCadenceStats:
-    def test_with_values(self):
-        avg, mx = _compute_cadence_stats([80, 85, 90])
-        assert avg == 85.0
-        assert mx == 90.0
-
-    def test_empty(self):
-        avg, mx = _compute_cadence_stats([])
-        assert avg is None
-        assert mx is None
-
-    def test_single_value(self):
-        avg, mx = _compute_cadence_stats([75])
-        assert avg == 75.0
-        assert mx == 75.0
 
 
 class TestComputeMaxSpeedSlidingWindow:
