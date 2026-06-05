@@ -64,7 +64,7 @@ async def post_verify_activity_sync(
     path="/upload",
     summary="Upload Activity",
     status_code=status.HTTP_201_CREATED,
-    responses={**ResponseDocs.unauthorized_response},
+    responses={**ResponseDocs.unauthorized_response, **ResponseDocs.conflict_response},
 )
 async def post_upload_activity(
     request: Request,
