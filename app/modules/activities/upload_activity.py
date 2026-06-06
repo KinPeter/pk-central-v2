@@ -88,8 +88,9 @@ async def upload_activity(
         user_sync_data["last_synced"] = datetime.now(timezone.utc).isoformat()
 
         if activity_data.type == ActivityType.RIDE:
-            user_sync_data["current_bike_kms"] += round(
-                activity_data.distance / 1000, 1
+            user_sync_data["current_bike_kms"] = round(
+                user_sync_data["current_bike_kms"] + activity_data.distance / 1000,
+                1,
             )
 
         await sync_meta_collection.update_one(
