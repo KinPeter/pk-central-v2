@@ -203,3 +203,122 @@ class TestGetStats:
         mock_request.app.state.logger.error.assert_called_with(
             f"Activities sync meta not found for user {mock_user.id}"
         )
+
+    @pytest.mark.asyncio
+    async def test_get_stats_empty_results(self, mock_request, mock_user):
+        """No activities or steps found — all stat values should be 0.0."""
+        mock_collections = {}
+
+        def get_collection_side_effect(name):
+            if name not in mock_collections:
+                coll = MagicMock()
+                coll.find_one = AsyncMock()
+                coll.find = MagicMock()
+                mock_collections[name] = coll
+            return mock_collections[name]
+
+        mock_request.app.state.db.get_collection.side_effect = (
+            get_collection_side_effect
+        )
+
+        config_coll = mock_request.app.state.db.get_collection("activities_config")
+        config_coll.find_one = AsyncMock(return_value=self.CONFIG_DATA)
+
+        sync_coll = mock_request.app.state.db.get_collection("activities_sync_meta")
+        sync_coll.find_one = AsyncMock(return_value=self.SYNC_META_DATA)
+
+        act_coll = mock_request.app.state.db.get_collection("activities")
+        act_coll.find = MagicMock(return_value=_make_cursor([]))
+
+        steps_coll = mock_request.app.state.db.get_collection("steps")
+        steps_coll.find = MagicMock(return_value=_make_cursor([]))
+
+        result = await get_stats(mock_request, mock_user)
+
+        assert result.walk.this_week == 0.0
+        assert result.walk.last_week == 0.0
+        assert result.walk.this_month == 0.0
+        assert result.walk.last_month == 0.0
+        assert result.cycling.this_week == 0.0
+        assert result.cycling.last_week == 0.0
+        assert result.cycling.this_month == 0.0
+        assert result.cycling.last_month == 0.0
+        assert result.steps.this_week == 0.0
+        assert result.steps.last_week == 0.0
+        assert result.steps.this_month == 0.0
+        assert result.steps.last_month == 0.0
+
+    @pytest.mark.asyncio
+    async def test_get_stats_missing_current_bike_kms(self, mock_request, mock_user):
+        """Sync meta without current_bike_kms — defaults to 0.0."""
+        mock_collections = {}
+
+        def get_collection_side_effect(name):
+            if name not in mock_collections:
+                coll = MagicMock()
+                coll.find_one = AsyncMock()
+                coll.find = MagicMock()
+                mock_collections[name] = coll
+            return mock_collections[name]
+
+        mock_request.app.state.db.get_collection.side_effect = (
+            get_collection_side_effect
+        )
+
+        config_coll = mock_request.app.state.db.get_collection("activities_config")
+        config_coll.find_one = AsyncMock(return_value=self.CONFIG_DATA)
+
+        sync_coll = mock_request.app.state.db.get_collection("activities_sync_meta")
+        sync_coll.find_one = AsyncMock(
+            return_value={
+                "user_id": "user123",
+                "synced_ids": [],
+            }
+        )
+
+        act_coll = mock_request.app.state.db.get_collection("activities")
+        act_coll.find = MagicMock(return_value=_make_cursor([]))
+
+        steps_coll = mock_request.app.state.db.get_collection("steps")
+        steps_coll.find = MagicMock(return_value=_make_cursor([]))
+
+        result = await get_stats(mock_request, mock_user)
+
+        assert result.current_bike_kms == 0.0
+
+    @pytest.mark.asyncio
+    async def test_get_stats_config_without_chores(self, mock_request, mock_user):
+        """Config without chores key — defaults to empty list."""
+        config_no_chores = {k: v for k, v in self.CONFIG_DATA.items() if k != "chores"}
+
+        mock_collections = {}
+
+        def get_collection_side_effect(name):
+            if name not in mock_collections:
+                coll = MagicMock()
+                coll.find_one = AsyncMock()
+                coll.find = MagicMock()
+                mock_collections[name] = coll
+            return mock_collections[name]
+
+        mock_request.app.state.db.get_collection.side_effect = (
+            get_collection_side_effect
+        )
+
+        config_coll = mock_request.app.state.db.get_collection("activities_config")
+        config_coll.find_one = AsyncMock(return_value=config_no_chores)
+
+        sync_coll = mock_request.app.state.db.get_collection("activities_sync_meta")
+        sync_coll.find_one = AsyncMock(return_value=self.SYNC_META_DATA)
+
+        act_coll = mock_request.app.state.db.get_collection("activities")
+        act_coll.find = MagicMock(return_value=_make_cursor([]))
+
+        steps_coll = mock_request.app.state.db.get_collection("steps")
+        steps_coll.find = MagicMock(return_value=_make_cursor([]))
+
+        result = await get_stats(mock_request, mock_user)
+
+        assert result.chores == []
+        assert result.id == "cfg1"
+        assert result.current_bike_kms == 250.5
