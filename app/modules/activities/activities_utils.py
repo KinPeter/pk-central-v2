@@ -1,7 +1,41 @@
 from logging import Logger
 import uuid
 from app.common.db import DbCollection
+from app.common.date_utils import to_iso_day_start, to_iso_day_end
 from app.common.types import AsyncDatabase
+
+
+async def sum_distance(
+    collection, user_id: str, activity_type: str, start_bound: str, end_bound: str
+) -> float:
+    """Sum activity distances in kilometers for a given type and date range."""
+    cursor = collection.find(
+        {
+            "user_id": user_id,
+            "type": activity_type,
+            "start_date": {
+                "$gte": to_iso_day_start(start_bound),
+                "$lte": to_iso_day_end(end_bound),
+            },
+        }
+    )
+    docs = await cursor.to_list(length=None)
+    total_meters = sum(d.get("distance", 0) for d in docs)
+    return round(total_meters / 1000, 1)
+
+
+async def sum_steps(
+    collection, user_id: str, start_bound: str, end_bound: str
+) -> float:
+    """Sum steps for a given date range. Steps dates are stored as YYYY-MM-DD."""
+    cursor = collection.find(
+        {
+            "user_id": user_id,
+            "date": {"$gte": start_bound, "$lte": end_bound},
+        }
+    )
+    docs = await cursor.to_list(length=None)
+    return float(sum(d.get("steps", 0) for d in docs))
 
 
 async def create_initial_activities_config(

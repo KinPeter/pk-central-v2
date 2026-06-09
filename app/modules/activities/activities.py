@@ -5,6 +5,7 @@ from fastapi.params import Depends
 from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.activities.activities_types import (
     ActivitiesConfig,
+    ActivitiesStats,
     ChoreRequest,
     GoalsRequest,
     StepsItem,
@@ -13,6 +14,7 @@ from app.modules.activities.activities_types import (
     VerifyActivitySyncResponse,
 )
 from app.modules.activities.get_activities_config import get_activities_config
+from app.modules.activities.get_stats import get_stats
 from app.modules.activities.get_steps import get_steps
 from app.modules.activities.add_chore import add_chore
 from app.modules.activities.delete_chore import delete_chore
@@ -177,6 +179,23 @@ async def post_sync_steps(
     Sync steps from Samsung Health for the current user.
     """
     return await sync_steps(request=request, user=user)
+
+
+@router.get(
+    path="/stats",
+    summary="Get Activities Stats for goals and chores",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response, **ResponseDocs.not_found_response},
+)
+async def get_activities_stats(
+    request: Request,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+) -> ActivitiesStats:
+    """
+    Get aggregated activity stats (walk, cycling, steps) for the current
+    and previous week/month, combined with goals, chores and bike kms.
+    """
+    return await get_stats(request, user)
 
 
 @router.get(

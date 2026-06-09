@@ -22,6 +22,20 @@ class ActivitiesConfig(OkResponse, BaseEntity):
     steps_monthly_goal: int
 
 
+class ActivityStats(PkBaseModel):
+    this_week: float
+    last_week: float
+    this_month: float
+    last_month: float
+
+
+class ActivitiesStats(ActivitiesConfig):
+    walk: ActivityStats
+    cycling: ActivityStats
+    steps: ActivityStats
+    current_bike_kms: float
+
+
 class ChoreRequest(PkBaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     km_interval: int = Field(..., ge=1)

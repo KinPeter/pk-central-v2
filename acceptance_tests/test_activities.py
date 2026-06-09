@@ -899,3 +899,137 @@ class TestGetSyncedSteps:
 
         steps_by_date = {e["date"]: e["steps"] for e in data["entities"]}
         assert steps_by_date[d] == 6000
+
+
+class TestGetActivitiesStats:
+    def test_get_stats_success(self, client, login_user):
+        """Stats endpoint returns goals, chores, and computed stats."""
+        from datetime import datetime, timezone, timedelta
+        from pymongo import MongoClient
+
+        token, user_id, email = login_user
+        today = datetime.now(timezone.utc)
+        today_str = today.strftime("%Y-%m-%d")
+
+        # Insert test activities directly into the test DB
+        mongo_client = MongoClient("mongodb://admin:admin@localhost:30017/")
+        db = mongo_client.get_database("test_db")
+
+        # Insert a walk activity for this week
+        db.get_collection("activities").insert_one(
+            {
+                "id": "act_walk_1",
+                "user_id": user_id,
+                "type": "walk",
+                "source_id": "test_1",
+                "name": "Test Walk",
+                "start_date": f"{today_str}T10:00:00+00:00",
+                "moving_time": 1800,
+                "elapsed_time": 2000,
+                "distance": 4500.0,  # 4.5 km
+                "total_elevation_gain": 20.0,
+                "average_speed": 1.5,
+                "max_speed": 2.0,
+            }
+        )
+
+        # Insert a ride activity for this week
+        db.get_collection("activities").insert_one(
+            {
+                "id": "act_ride_1",
+                "user_id": user_id,
+                "type": "ride",
+                "source_id": "test_2",
+                "name": "Test Ride",
+                "start_date": f"{today_str}T12:00:00+00:00",
+                "moving_time": 3600,
+                "elapsed_time": 3800,
+                "distance": 20000.0,  # 20.0 km
+                "total_elevation_gain": 150.0,
+                "average_speed": 5.5,
+                "max_speed": 12.0,
+            }
+        )
+
+        # Insert steps for today
+        db.get_collection("steps").insert_one(
+            {
+                "user_id": user_id,
+                "steps": 8000,
+                "date": today_str,
+            }
+        )
+
+        # Configure some bike km in sync meta
+        db.get_collection("activities_sync_meta").insert_one(
+            {
+                "user_id": user_id,
+                "synced_ids": [],
+                "current_bike_kms": 123.4,
+                "last_synced": None,
+            }
+        )
+
+        # Update config goals to non-zero values so we can verify them
+        db.get_collection("activities_config").update_one(
+            {"user_id": user_id},
+            {
+                "$set": {
+                    "walk_weekly_goal": 30,
+                    "walk_monthly_goal": 120,
+                    "cycling_weekly_goal": 60,
+                    "cycling_monthly_goal": 240,
+                    "steps_weekly_goal": 50000,
+                    "steps_monthly_goal": 200000,
+                }
+            },
+        )
+
+        mongo_client.close()
+
+        response = client.get(
+            "/activities/stats",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+
+        # Config fields
+        assert data["id"] is not None
+        assert data["walkWeeklyGoal"] == 30
+        assert data["walkMonthlyGoal"] == 120
+        assert data["cyclingWeeklyGoal"] == 60
+        assert data["cyclingMonthlyGoal"] == 240
+        assert data["stepsWeeklyGoal"] == 50000
+        assert data["stepsMonthlyGoal"] == 200000
+
+        # Walk stats (4.5 km this week)
+        assert data["walk"]["thisWeek"] == 4.5
+        assert data["walk"]["thisMonth"] == 4.5
+
+        # Cycling stats (20.0 km this week)
+        assert data["cycling"]["thisWeek"] == 20.0
+        assert data["cycling"]["thisMonth"] == 20.0
+
+        # Steps stats (8000 steps today)
+        assert data["steps"]["thisWeek"] == 8000.0
+        assert data["steps"]["thisMonth"] == 8000.0
+
+        # Previous periods should be 0 (no data)
+        assert data["walk"]["lastWeek"] == 0.0
+        assert data["cycling"]["lastWeek"] == 0.0
+        assert data["steps"]["lastWeek"] == 0.0
+        assert data["walk"]["lastMonth"] == 0.0
+        assert data["cycling"]["lastMonth"] == 0.0
+        assert data["steps"]["lastMonth"] == 0.0
+
+        # Bike kms
+        assert data["currentBikeKms"] == 123.4
+
+        # Chores
+        assert data["chores"] == []
+
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_get_stats_auth_errors(self, client, headers):
+        response = client.get("/activities/stats", headers=headers)
+        assert response.status_code == 401

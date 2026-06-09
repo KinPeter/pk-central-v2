@@ -1,9 +1,17 @@
 # Testing Guidelines
 
+## Environment
+
+**Always use the venv Python when running commands directly.** The project's venv is at `.venv/`. Running `pytest` or `python` without it will fail with import errors.
+
+- ✅ `PYTHONPATH=. /home/peter/code/central-v2/.venv/bin/pytest -v unit_tests/`
+- ✅ `make test` (handles the venv automatically)
+- ❌ `PYTHONPATH=. pytest` (bare `pytest` or `python` uses the system interpreter, not the venv)
+
 ## Unit tests
 
 - **Location:** `unit_tests/` — mirrors `app/` structure exactly. Every module in `app/modules/<name>/` has a matching `unit_tests/modules/<name>/` directory.
-- **Run:** `make test` (all), or `PYTHONPATH=. pytest -v unit_tests/modules/<name>/` (single module).
+- **Run:** `make test` (all), or `PYTHONPATH=. /home/peter/code/central-v2/.venv/bin/pytest -v unit_tests/modules/<name>/` (single module).
 - **Framework:** pytest + unittest.mock. All async tests use `@pytest.mark.asyncio`.
 
 ### Unit test file naming
