@@ -1,6 +1,23 @@
+import re
+from datetime import date, timedelta
+from pathlib import Path
+
+from httpx import Response
+
 import pytest
 import respx
-from httpx import Response
+
+
+def _replace_gpx_date(gpx_bytes: bytes, new_date: date) -> bytes:
+    """Replace all ISO date strings in GPX time tags with *new_date* (time preserved)."""
+    content = gpx_bytes.decode("utf-8")
+    content = re.sub(
+        r"\d{4}-\d{2}-\d{2}(?=T\d{2}:\d{2}:\d{2}Z)",
+        new_date.isoformat(),
+        content,
+    )
+    return content.encode("utf-8")
+
 
 # Parametrize cases covering all invalid auth scenarios for endpoints that
 # support both Bearer token and API key authentication.
@@ -902,91 +919,58 @@ class TestGetSyncedSteps:
 
 
 class TestGetActivitiesStats:
-    def test_get_stats_success(self, client, login_user):
-        """Stats endpoint returns goals, chores, and computed stats."""
-        from datetime import datetime, timezone, timedelta
-        from pymongo import MongoClient
+    """Stats endpoint tested via uploading real GPX activities"""
 
-        token, user_id, email = login_user
-        today = datetime.now(timezone.utc)
-        today_str = today.strftime("%Y-%m-%d")
+    def test_get_stats_with_uploaded_activities(self, client, login_user):
+        """Upload walk and ride GPX files, set goals, then verify stats."""
+        token, *_ = login_user
+        today = date.today()
+        this_monday = today - timedelta(days=today.weekday())
 
-        # Insert test activities directly into the test DB
-        mongo_client = MongoClient("mongodb://admin:admin@localhost:30017/")
-        db = mongo_client.get_database("test_db")
+        # Walk → last week (Mon-Sun) & this month
+        walk_date = this_monday - timedelta(days=7)
+        # Ride → last month
+        this_month_start = today.replace(day=1)
+        last_month_end = this_month_start - timedelta(days=1)
+        ride_date = last_month_end.replace(day=15)
 
-        # Insert a walk activity for this week
-        db.get_collection("activities").insert_one(
-            {
-                "id": "act_walk_1",
-                "user_id": user_id,
-                "type": "walk",
-                "source_id": "test_1",
-                "name": "Test Walk",
-                "start_date": f"{today_str}T10:00:00+00:00",
-                "moving_time": 1800,
-                "elapsed_time": 2000,
-                "distance": 4500.0,  # 4.5 km
-                "total_elevation_gain": 20.0,
-                "average_speed": 1.5,
-                "max_speed": 2.0,
-            }
+        walk_path = Path(__file__).parent / "test_files" / "walk.gpx"
+        walk_bytes = _replace_gpx_date(walk_path.read_bytes(), walk_date)
+        response = client.post(
+            "/activities/upload",
+            headers={"Authorization": f"Bearer {token}"},
+            files={"gpx_file": ("walk.gpx", walk_bytes, "application/gpx+xml")},
+            data={"source_id": "stats_walk"},
         )
+        assert response.status_code == 201
 
-        # Insert a ride activity for this week
-        db.get_collection("activities").insert_one(
-            {
-                "id": "act_ride_1",
-                "user_id": user_id,
-                "type": "ride",
-                "source_id": "test_2",
-                "name": "Test Ride",
-                "start_date": f"{today_str}T12:00:00+00:00",
-                "moving_time": 3600,
-                "elapsed_time": 3800,
-                "distance": 20000.0,  # 20.0 km
-                "total_elevation_gain": 150.0,
-                "average_speed": 5.5,
-                "max_speed": 12.0,
-            }
+        ride_path = Path(__file__).parent / "test_files" / "ride.gpx"
+        ride_bytes = _replace_gpx_date(ride_path.read_bytes(), ride_date)
+        response = client.post(
+            "/activities/upload",
+            headers={"Authorization": f"Bearer {token}"},
+            files={"gpx_file": ("ride.gpx", ride_bytes, "application/gpx+xml")},
+            data={"source_id": "stats_ride"},
         )
+        assert response.status_code == 201
 
-        # Insert steps for today
-        db.get_collection("steps").insert_one(
-            {
-                "user_id": user_id,
-                "steps": 8000,
-                "date": today_str,
-            }
+        # Update goals to non-zero values so we can verify them
+        body = {
+            "walkWeeklyGoal": 30,
+            "walkMonthlyGoal": 120,
+            "cyclingWeeklyGoal": 60,
+            "cyclingMonthlyGoal": 240,
+            "stepsWeeklyGoal": 50000,
+            "stepsMonthlyGoal": 200000,
+        }
+        response = client.patch(
+            "/activities/goals",
+            headers={"Authorization": f"Bearer {token}"},
+            json=body,
         )
+        assert response.status_code == 200
 
-        # Configure some bike km in sync meta
-        db.get_collection("activities_sync_meta").insert_one(
-            {
-                "user_id": user_id,
-                "synced_ids": [],
-                "current_bike_kms": 123.4,
-                "last_synced": None,
-            }
-        )
-
-        # Update config goals to non-zero values so we can verify them
-        db.get_collection("activities_config").update_one(
-            {"user_id": user_id},
-            {
-                "$set": {
-                    "walk_weekly_goal": 30,
-                    "walk_monthly_goal": 120,
-                    "cycling_weekly_goal": 60,
-                    "cycling_monthly_goal": 240,
-                    "steps_weekly_goal": 50000,
-                    "steps_monthly_goal": 200000,
-                }
-            },
-        )
-
-        mongo_client.close()
-
+        # Get stats
         response = client.get(
             "/activities/stats",
             headers={"Authorization": f"Bearer {token}"},
@@ -1003,33 +987,528 @@ class TestGetActivitiesStats:
         assert data["stepsWeeklyGoal"] == 50000
         assert data["stepsMonthlyGoal"] == 200000
 
-        # Walk stats (4.5 km this week)
-        assert data["walk"]["thisWeek"] == 4.5
-        assert data["walk"]["thisMonth"] == 4.5
-
-        # Cycling stats (20.0 km this week)
-        assert data["cycling"]["thisWeek"] == 20.0
-        assert data["cycling"]["thisMonth"] == 20.0
-
-        # Steps stats (8000 steps today)
-        assert data["steps"]["thisWeek"] == 8000.0
-        assert data["steps"]["thisMonth"] == 8000.0
-
-        # Previous periods should be 0 (no data)
-        assert data["walk"]["lastWeek"] == 0.0
-        assert data["cycling"]["lastWeek"] == 0.0
-        assert data["steps"]["lastWeek"] == 0.0
+        # Walk stats — walk is 2026-06-01 → last_week and this_month
+        assert data["walk"]["thisWeek"] == 0.0
+        assert data["walk"]["lastWeek"] > 0.0
+        assert data["walk"]["thisMonth"] > 0.0
         assert data["walk"]["lastMonth"] == 0.0
-        assert data["cycling"]["lastMonth"] == 0.0
+
+        # Cycling stats — ride is 2026-05-28 → last_month
+        assert data["cycling"]["thisWeek"] == 0.0
+        assert data["cycling"]["lastWeek"] == 0.0
+        assert data["cycling"]["thisMonth"] == 0.0
+        assert data["cycling"]["lastMonth"] > 0.0
+
+        # Steps stats are 0 (no steps synced)
+        assert data["steps"]["thisWeek"] == 0.0
+        assert data["steps"]["lastWeek"] == 0.0
+        assert data["steps"]["thisMonth"] == 0.0
         assert data["steps"]["lastMonth"] == 0.0
 
-        # Bike kms
-        assert data["currentBikeKms"] == 123.4
+        # Bike kms should be > 0 because ride upload adds to current_bike_kms
+        assert data["currentBikeKms"] > 0.0
 
-        # Chores
+        # Chores should be empty
         assert data["chores"] == []
+
+    def test_get_stats_only_walk_uploaded(self, client, login_user):
+        """Upload only a walk — cycling and steps remain zero, no bike kms."""
+        token, *_ = login_user
+        today = date.today()
+        this_monday = today - timedelta(days=today.weekday())
+        walk_date = this_monday - timedelta(days=7)  # last week & this month
+
+        walk_path = Path(__file__).parent / "test_files" / "walk.gpx"
+        walk_bytes = _replace_gpx_date(walk_path.read_bytes(), walk_date)
+        response = client.post(
+            "/activities/upload",
+            headers={"Authorization": f"Bearer {token}"},
+            files={"gpx_file": ("walk.gpx", walk_bytes, "application/gpx+xml")},
+            data={"source_id": "stats_only_walk"},
+        )
+        assert response.status_code == 201
+
+        response = client.get(
+            "/activities/stats",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+
+        # Walk appears in last_week and this_month
+        assert data["walk"]["lastWeek"] > 0.0
+        assert data["walk"]["thisMonth"] > 0.0
+
+        # Cycling is all zero
+        assert data["cycling"]["thisWeek"] == 0.0
+        assert data["cycling"]["lastWeek"] == 0.0
+        assert data["cycling"]["thisMonth"] == 0.0
+        assert data["cycling"]["lastMonth"] == 0.0
+
+        # Steps are all zero
+        assert data["steps"]["thisWeek"] == 0.0
+        assert data["steps"]["lastWeek"] == 0.0
+        assert data["steps"]["thisMonth"] == 0.0
+        assert data["steps"]["lastMonth"] == 0.0
+
+        # No bike kms (no ride uploaded)
+        assert data["currentBikeKms"] == 0.0
+
+        # Default goals at 0
+        assert data["walkWeeklyGoal"] == 0
 
     @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
     def test_get_stats_auth_errors(self, client, headers):
         response = client.get("/activities/stats", headers=headers)
         assert response.status_code == 401
+
+
+class TestUploadActivity:
+    """Upload GPX activities and verify the responses."""
+
+    def test_upload_walk_success(self, client, login_user):
+        """Upload a walking GPX and verify the parsed activity."""
+        token, *_ = login_user
+        gpx_path = Path(__file__).parent / "test_files" / "walk.gpx"
+        with open(gpx_path, "rb") as f:
+            response = client.post(
+                "/activities/upload",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": "test_upload_walk"},
+            )
+        assert response.status_code == 201
+        data = response.json()
+        assert "id" in data
+        assert data["id"] is not None
+
+        # Verify by querying activities
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={},
+        )
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert len(entities) == 1
+        assert entities[0]["type"] == "walk"
+        assert entities[0]["sourceId"] == "test_upload_walk"
+        assert entities[0]["name"] == "Afternoon Walk"
+        assert entities[0]["distance"] > 0
+        assert entities[0]["movingTime"] > 0
+        assert entities[0]["elapsedTime"] > 0
+        assert entities[0]["averageSpeed"] > 0
+        assert entities[0]["maxSpeed"] > 0
+
+    def test_upload_ride_success(self, client, login_user):
+        """Upload a cycling GPX and verify the parsed activity."""
+        token, *_ = login_user
+        gpx_path = Path(__file__).parent / "test_files" / "ride.gpx"
+        with open(gpx_path, "rb") as f:
+            response = client.post(
+                "/activities/upload",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"gpx_file": ("ride.gpx", f, "application/gpx+xml")},
+                data={"source_id": "test_upload_ride"},
+            )
+        assert response.status_code == 201
+        data = response.json()
+        assert "id" in data
+
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={},
+        )
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert len(entities) == 1
+        assert entities[0]["type"] == "ride"
+        assert entities[0]["sourceId"] == "test_upload_ride"
+        assert entities[0]["name"] == "Afternoon Ride"
+        assert entities[0]["distance"] > 0
+
+    def test_upload_boating_success(self, client, login_user):
+        """Upload a boating GPX and verify the parsed activity."""
+        token, *_ = login_user
+        gpx_path = Path(__file__).parent / "test_files" / "boating.gpx"
+        with open(gpx_path, "rb") as f:
+            response = client.post(
+                "/activities/upload",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"gpx_file": ("boating.gpx", f, "application/gpx+xml")},
+                data={"source_id": "test_upload_boating"},
+            )
+        assert response.status_code == 201
+        data = response.json()
+        assert "id" in data
+
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={},
+        )
+        assert response.status_code == 200
+        entities = response.json()["entities"]
+        assert len(entities) == 1
+        assert entities[0]["type"] == "boating"
+        assert entities[0]["sourceId"] == "test_upload_boating"
+        assert entities[0]["name"] == "Danube boating"
+        assert entities[0]["distance"] > 0
+
+    def test_upload_duplicate_source_id(self, client, login_user):
+        """Uploading the same source_id twice returns 409 Conflict."""
+        token, *_ = login_user
+        gpx_path = Path(__file__).parent / "test_files" / "walk.gpx"
+
+        with open(gpx_path, "rb") as f:
+            response = client.post(
+                "/activities/upload",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": "test_duplicate"},
+            )
+        assert response.status_code == 201
+
+        with open(gpx_path, "rb") as f:
+            response = client.post(
+                "/activities/upload",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": "test_duplicate"},
+            )
+        assert response.status_code == 409
+        data = response.json()
+        assert "detail" in data
+        assert "already synced" in data["detail"].lower()
+
+    def test_upload_invalid_file(self, client, login_user):
+        """Uploading a non-GPX file returns 422."""
+        token, *_ = login_user
+        response = client.post(
+            "/activities/upload",
+            headers={"Authorization": f"Bearer {token}"},
+            files={
+                "gpx_file": ("not_a_gpx.txt", b"this is not a gpx file", "text/plain")
+            },
+            data={"source_id": "test_invalid"},
+        )
+        assert response.status_code == 422
+
+    def test_upload_empty_source_id(self, client, login_user):
+        """Uploading with an empty source_id returns 422."""
+        token, *_ = login_user
+        gpx_path = Path(__file__).parent / "test_files" / "walk.gpx"
+        with open(gpx_path, "rb") as f:
+            response = client.post(
+                "/activities/upload",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": ""},
+            )
+        assert response.status_code == 422
+
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_upload_auth_errors(self, client, headers):
+        """Upload with invalid auth returns 401."""
+        gpx_path = Path(__file__).parent / "test_files" / "walk.gpx"
+        with open(gpx_path, "rb") as f:
+            response = client.post(
+                "/activities/upload",
+                headers=headers,
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": "test_auth_err"},
+            )
+        assert response.status_code == 401
+
+    def test_upload_with_api_key(self, client, api_key):
+        """Upload using API key auth succeeds."""
+        gpx_path = Path(__file__).parent / "test_files" / "walk.gpx"
+        with open(gpx_path, "rb") as f:
+            response = client.post(
+                "/activities/upload",
+                headers={"X-PK-Api-Key": api_key},
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": "test_api_key_upload"},
+            )
+        assert response.status_code == 201
+        assert "id" in response.json()
+
+
+class TestVerifyActivitySync:
+    """Verify sync status of uploaded activity source IDs."""
+
+    def test_verify_sync_none_uploaded(self, client, login_user):
+        """No activities uploaded — all requested IDs are unsynced."""
+        token, *_ = login_user
+        response = client.post(
+            "/activities/verify-sync",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"activityIds": ["strava_1", "strava_2", "strava_3"]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert set(data["unsynced"]) == {"strava_1", "strava_2", "strava_3"}
+
+    def test_verify_sync_all_uploaded(self, client, login_user):
+        """After uploading all IDs, verify-sync returns empty unsynced."""
+        token, *_ = login_user
+        gpx_path = Path(__file__).parent / "test_files" / "walk.gpx"
+
+        with open(gpx_path, "rb") as f:
+            client.post(
+                "/activities/upload",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": "sync_all_1"},
+            )
+        with open(gpx_path, "rb") as f:
+            client.post(
+                "/activities/upload",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": "sync_all_2"},
+            )
+
+        response = client.post(
+            "/activities/verify-sync",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"activityIds": ["sync_all_1", "sync_all_2"]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["unsynced"] == []
+
+    def test_verify_sync_mixed(self, client, login_user):
+        """Some IDs uploaded, some not — only missing ones are unsynced."""
+        token, *_ = login_user
+        gpx_path = Path(__file__).parent / "test_files" / "walk.gpx"
+        with open(gpx_path, "rb") as f:
+            client.post(
+                "/activities/upload",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": "synced_id"},
+            )
+
+        response = client.post(
+            "/activities/verify-sync",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"activityIds": ["synced_id", "unsynced_1", "unsynced_2"]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert set(data["unsynced"]) == {"unsynced_1", "unsynced_2"}
+
+    def test_verify_sync_empty_request(self, client, login_user):
+        """Empty activity IDs list — returns empty unsynced list."""
+        token, *_ = login_user
+        response = client.post(
+            "/activities/verify-sync",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"activityIds": []},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["unsynced"] == []
+
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_verify_sync_auth_errors(self, client, headers):
+        response = client.post(
+            "/activities/verify-sync",
+            headers=headers,
+            json={"activityIds": ["some_id"]},
+        )
+        assert response.status_code == 401
+
+    def test_verify_sync_with_api_key(self, client, api_key):
+        """Verify sync using API key auth."""
+        gpx_path = Path(__file__).parent / "test_files" / "walk.gpx"
+        with open(gpx_path, "rb") as f:
+            client.post(
+                "/activities/upload",
+                headers={"X-PK-Api-Key": api_key},
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": "api_key_synced"},
+            )
+
+        response = client.post(
+            "/activities/verify-sync",
+            headers={"X-PK-Api-Key": api_key},
+            json={"activityIds": ["api_key_synced", "api_key_unsynced"]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["unsynced"] == ["api_key_unsynced"]
+
+
+class TestQueryActivities:
+    """Query activities with various filters after uploading GPX files."""
+
+    def _upload_all_three(self, client, token):
+        """Helper: upload all 3 GPX test files."""
+        for filename, sid in [
+            ("walk.gpx", "q_walk"),
+            ("ride.gpx", "q_ride"),
+            ("boating.gpx", "q_boat"),
+        ]:
+            gpx_path = Path(__file__).parent / "test_files" / filename
+            with open(gpx_path, "rb") as f:
+                client.post(
+                    "/activities/upload",
+                    headers={"Authorization": f"Bearer {token}"},
+                    files={"gpx_file": (filename, f, "application/gpx+xml")},
+                    data={"source_id": sid},
+                )
+
+    def test_query_all(self, client, login_user):
+        """Query without filters returns all uploaded activities."""
+        token, *_ = login_user
+        self._upload_all_three(client, token)
+
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "entities" in data
+        assert len(data["entities"]) == 3
+
+        types = {e["type"] for e in data["entities"]}
+        assert types == {"walk", "ride", "boating"}
+
+    def test_query_by_type_walk(self, client, login_user):
+        """Filter by walk type returns only the walk activity."""
+        token, *_ = login_user
+        self._upload_all_three(client, token)
+
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"types": ["walk"]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 1
+        assert data["entities"][0]["type"] == "walk"
+
+    def test_query_by_type_ride(self, client, login_user):
+        """Filter by ride type returns only the ride activity."""
+        token, *_ = login_user
+        self._upload_all_three(client, token)
+
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"types": ["ride"]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 1
+        assert data["entities"][0]["type"] == "ride"
+
+    def test_query_by_type_boating(self, client, login_user):
+        """Filter by boating type returns only the boating activity."""
+        token, *_ = login_user
+        self._upload_all_three(client, token)
+
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"types": ["boating"]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 1
+        assert data["entities"][0]["type"] == "boating"
+
+    def test_query_by_multiple_types(self, client, login_user):
+        """Filter by multiple types returns matching activities."""
+        token, *_ = login_user
+        self._upload_all_three(client, token)
+
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"types": ["walk", "ride"]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 2
+        types = {e["type"] for e in data["entities"]}
+        assert types == {"walk", "ride"}
+
+    def test_query_by_date_range(self, client, login_user):
+        """Filter by date range — only walk (2026-06-01) falls in early June."""
+        token, *_ = login_user
+        self._upload_all_three(client, token)
+
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"fromDate": "2026-06-01", "toDate": "2026-06-07"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 1
+        assert data["entities"][0]["type"] == "walk"
+
+    def test_query_empty_result(self, client, login_user):
+        """Query with a non-matching filter returns empty list."""
+        token, *_ = login_user
+        self._upload_all_three(client, token)
+
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"types": ["walk"], "fromDate": "2099-01-01", "toDate": "2099-12-31"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["entities"] == []
+
+    def test_query_no_activities_uploaded(self, client, login_user):
+        """No activities uploaded at all — returns empty list."""
+        token, *_ = login_user
+
+        response = client.post(
+            "/activities/query",
+            headers={"Authorization": f"Bearer {token}"},
+            json={},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["entities"] == []
+
+    @pytest.mark.parametrize("headers", AUTH_ERROR_CASES)
+    def test_query_auth_errors(self, client, headers):
+        """Query with invalid auth returns 401."""
+        response = client.post(
+            "/activities/query",
+            headers=headers,
+            json={},
+        )
+        assert response.status_code == 401
+
+    def test_query_with_api_key(self, client, api_key):
+        """Query using API key auth."""
+        gpx_path = Path(__file__).parent / "test_files" / "walk.gpx"
+        with open(gpx_path, "rb") as f:
+            client.post(
+                "/activities/upload",
+                headers={"X-PK-Api-Key": api_key},
+                files={"gpx_file": ("walk.gpx", f, "application/gpx+xml")},
+                data={"source_id": "api_key_query"},
+            )
+
+        response = client.post(
+            "/activities/query",
+            headers={"X-PK-Api-Key": api_key},
+            json={},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["entities"]) == 1
+        assert data["entities"][0]["sourceId"] == "api_key_query"
