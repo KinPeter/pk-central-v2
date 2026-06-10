@@ -34,6 +34,14 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
         activities_config = await db.get_collection(
             DbCollection.ACTIVITIES_CONFIG
         ).find_one({"user_id": user.id})
+        activities = (
+            await db.get_collection(DbCollection.ACTIVITIES)
+            .find({"user_id": user.id})
+            .to_list(length=None)
+        )
+        activities_sync_meta = await db.get_collection(
+            DbCollection.ACTIVITIES_SYNC_META
+        ).find_one({"user_id": user.id})
         reddit = await db.get_collection(DbCollection.REDDIT).find_one(
             {"user_id": user.id}
         )
@@ -105,6 +113,8 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
         user_data.pop("_id", None) if user_data else {}
         start_settings.pop("_id", None) if start_settings else {}
         activities_config.pop("_id", None) if activities_config else {}
+        activities = remove_ids(activities)
+        activities_sync_meta.pop("_id", None) if activities_sync_meta else {}
         reddit.pop("_id", None) if reddit else {}
         flights = remove_ids(flights)
         visits = remove_ids(visits)
@@ -132,6 +142,16 @@ async def email_backup(request: Request, user: CurrentUser) -> MessageResponse:
             EmailAttachment(
                 content=json.dumps(activities_config, default=str, ensure_ascii=False),
                 filename=f"activities_config.json",
+            ),
+            EmailAttachment(
+                content=json.dumps(activities, default=str, ensure_ascii=False),
+                filename=f"activities.json",
+            ),
+            EmailAttachment(
+                content=json.dumps(
+                    activities_sync_meta, default=str, ensure_ascii=False
+                ),
+                filename=f"activities_sync_meta.json",
             ),
             EmailAttachment(
                 content=json.dumps(flights, default=str, ensure_ascii=False),
