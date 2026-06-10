@@ -1,6 +1,7 @@
 from enum import Enum
 
 from pydantic import Field
+from app.common.constants import SIMPLE_DATE_REGEX
 from app.common.responses import OkResponse
 from app.common.types import BaseEntity, PkBaseModel
 
@@ -94,3 +95,9 @@ class ActivityData(PkBaseModel):
 
 class Activity(BaseEntity, ActivityData):
     pass
+
+
+class ActivityQuery(PkBaseModel):
+    types: list[ActivityType] = Field(default_factory=list)
+    from_date: str | None = Field(default=None, pattern=SIMPLE_DATE_REGEX)
+    to_date: str | None = Field(default=None, pattern=SIMPLE_DATE_REGEX)

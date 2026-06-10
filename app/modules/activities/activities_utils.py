@@ -3,6 +3,28 @@ import uuid
 from app.common.db import DbCollection
 from app.common.date_utils import to_iso_day_start, to_iso_day_end
 from app.common.types import AsyncDatabase
+from app.modules.activities.activities_types import Activity
+
+
+def to_activity(item: dict) -> Activity:
+    """Map a MongoDB activity document to an Activity model."""
+    return Activity(
+        id=item["id"],
+        type=item["type"],
+        source_id=item["source_id"],
+        name=item["name"],
+        start_date=item["start_date"],
+        moving_time=item["moving_time"],
+        elapsed_time=item["elapsed_time"],
+        distance=item["distance"],
+        total_elevation_gain=item["total_elevation_gain"],
+        average_speed=item["average_speed"],
+        max_speed=item["max_speed"],
+        average_heartrate=item.get("average_heartrate"),
+        max_heartrate=item.get("max_heartrate"),
+        average_cadence=item.get("average_cadence"),
+        max_cadence=item.get("max_cadence"),
+    )
 
 
 async def sum_distance(

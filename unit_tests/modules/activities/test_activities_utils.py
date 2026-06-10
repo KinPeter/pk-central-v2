@@ -4,7 +4,9 @@ from app.modules.activities.activities_utils import (
     create_initial_activities_config,
     sum_distance,
     sum_steps,
+    to_activity,
 )
+from app.modules.activities.activities_types import ActivityType
 
 
 class TestCreateInitialActivitiesConfig:
@@ -211,3 +213,89 @@ class TestSumSteps:
 
         assert isinstance(result, float)
         assert result == 8000.0
+
+
+class TestToActivity:
+    """Tests for the to_activity mapper function."""
+
+    def test_full_activity_doc(self):
+        """All fields present — maps correctly."""
+        doc = {
+            "id": "act_123",
+            "type": "ride",
+            "source_id": "strava_001",
+            "name": "Morning Ride",
+            "start_date": "2024-06-01T12:00:00+00:00",
+            "moving_time": 3600,
+            "elapsed_time": 3900,
+            "distance": 25000.0,
+            "total_elevation_gain": 200.0,
+            "average_speed": 6.94,
+            "max_speed": 15.0,
+            "average_heartrate": 145,
+            "max_heartrate": 175,
+            "average_cadence": 90,
+            "max_cadence": 110,
+        }
+        activity = to_activity(doc)
+
+        assert activity.id == "act_123"
+        assert activity.type == ActivityType.RIDE
+        assert activity.source_id == "strava_001"
+        assert activity.name == "Morning Ride"
+        assert activity.start_date == "2024-06-01T12:00:00+00:00"
+        assert activity.moving_time == 3600
+        assert activity.elapsed_time == 3900
+        assert activity.distance == 25000.0
+        assert activity.total_elevation_gain == 200.0
+        assert activity.average_speed == 6.94
+        assert activity.max_speed == 15.0
+        assert activity.average_heartrate == 145
+        assert activity.max_heartrate == 175
+        assert activity.average_cadence == 90
+        assert activity.max_cadence == 110
+
+    def test_missing_optional_fields(self):
+        """Optional fields missing — maps to None."""
+        doc = {
+            "id": "act_456",
+            "type": "walk",
+            "source_id": "strava_002",
+            "name": "Evening Walk",
+            "start_date": "2024-06-02T18:00:00+00:00",
+            "moving_time": 1800,
+            "elapsed_time": 2000,
+            "distance": 3000.0,
+            "total_elevation_gain": 30.0,
+            "average_speed": 1.67,
+            "max_speed": 2.5,
+        }
+        activity = to_activity(doc)
+
+        assert activity.id == "act_456"
+        assert activity.type == ActivityType.WALK
+        assert activity.average_heartrate is None
+        assert activity.max_heartrate is None
+        assert activity.average_cadence is None
+        assert activity.max_cadence is None
+
+    def test_boating_type(self):
+        """Boating type maps correctly."""
+        doc = {
+            "id": "act_789",
+            "type": "boating",
+            "source_id": "strava_003",
+            "name": "Lake Trip",
+            "start_date": "2024-06-03T10:00:00+00:00",
+            "moving_time": 7200,
+            "elapsed_time": 8000,
+            "distance": 12000.0,
+            "total_elevation_gain": 10.0,
+            "average_speed": 1.67,
+            "max_speed": 3.0,
+        }
+        activity = to_activity(doc)
+
+        assert activity.id == "act_789"
+        assert activity.type == ActivityType.BOATING
+        assert activity.name == "Lake Trip"

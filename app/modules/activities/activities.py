@@ -6,6 +6,8 @@ from app.common.responses import IdResponse, ListResponse, ResponseDocs
 from app.modules.activities.activities_types import (
     ActivitiesConfig,
     ActivitiesStats,
+    Activity,
+    ActivityQuery,
     ChoreRequest,
     GoalsRequest,
     StepsItem,
@@ -23,6 +25,7 @@ from app.modules.activities.update_chore import update_chore
 from app.modules.activities.update_goals import update_goals
 from app.modules.activities.upload_activity import upload_activity
 from app.modules.activities.verify_activity_sync import verify_activity_sync
+from app.modules.activities.query_activities import query_activities
 from app.modules.auth.auth_types import CurrentUser
 from app.modules.auth.auth_utils import auth_user_or_api_key
 
@@ -78,6 +81,41 @@ async def post_upload_activity(
     Upload an activity by parsing data from the GPX file
     """
     return await upload_activity(request, user, gpx_file, source_id)
+
+
+@router.get(
+    path="/stats",
+    summary="Get Activities Stats for goals and chores",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response, **ResponseDocs.not_found_response},
+)
+async def get_activities_stats(
+    request: Request,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+) -> ActivitiesStats:
+    """
+    Get aggregated activity stats (walk, cycling, steps) for the current
+    and previous week/month, combined with goals, chores and bike kms.
+    """
+    return await get_stats(request, user)
+
+
+@router.post(
+    path="/query",
+    summary="Query Activities",
+    status_code=status.HTTP_200_OK,
+    responses={**ResponseDocs.unauthorized_response},
+)
+async def post_query_activities(
+    request: Request,
+    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
+    body: ActivityQuery,
+) -> ListResponse[Activity]:
+    """
+    Query activities for the current user with optional type and date range filters.
+    If no filters are provided, returns all activities sorted by start_date descending.
+    """
+    return await query_activities(request, body, user)
 
 
 @router.get(
@@ -179,23 +217,6 @@ async def post_sync_steps(
     Sync steps from Samsung Health for the current user.
     """
     return await sync_steps(request=request, user=user)
-
-
-@router.get(
-    path="/stats",
-    summary="Get Activities Stats for goals and chores",
-    status_code=status.HTTP_200_OK,
-    responses={**ResponseDocs.unauthorized_response, **ResponseDocs.not_found_response},
-)
-async def get_activities_stats(
-    request: Request,
-    user: Annotated[CurrentUser, Depends(auth_user_or_api_key)],
-) -> ActivitiesStats:
-    """
-    Get aggregated activity stats (walk, cycling, steps) for the current
-    and previous week/month, combined with goals, chores and bike kms.
-    """
-    return await get_stats(request, user)
 
 
 @router.get(
